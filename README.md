@@ -54,5 +54,7 @@ PremiumPool is a non-custodial protocol. That means no one has the ability to co
 ## Workflow visual
 
 
+![Disegno senza titolo](https://user-images.githubusercontent.com/8236762/188495685-a49a142a-3ba2-4f0f-9bd4-ff7e07bb495d.jpg)
+
 
 
