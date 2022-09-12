@@ -4,6 +4,8 @@ pragma solidity ^0.8.13;
 import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 import "../node_modules/@openzeppelin/contracts/utils/Counters.sol";
 import "../node_modules/@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./PremiumPool.sol";
 
 /**
  * @title Draw
@@ -24,30 +26,35 @@ contract DrawController is
         uint256 endTime;
         uint256 prize;
         uint256 usdcDeposit;
-        address[] participants;
         address winner;
     }
 
     /* ========== GLOBAL VARIABLES ========== */
 
+    PremiumPool public pool; // pool instance
     uint256 public constant DRAW_DURATION = 24 hours; //duration of every draw
     Counters.Counter private drawId;
     mapping(uint256 => Draw) private draws;
-    mapping(bytes32 => uint256) private drawRandomnessRequest;
-    mapping(uint256 => mapping(address => uint256)) ppplayer; //participations per player
-    mapping(uint256 => uint256) playersCount;
     bytes32 private keyHash;
     uint256 private fee;
+    IERC20 public ticket; // ticket instance
 
     /* ========== EVENTS ========== */
 
-    event DrawCreated(uint256 drawId, uint256 startTime, uint256 endTime);
+    event DrawCreated(uint256 drawId, uint256 startTime);
+    event CloseDraw(uint256 drawId, uint256 endTime);
+    event RandomnessRequested(bytes32 requestId, uint256 drawId, uint256 fee);
+    event WinnerElected(uint256 drawId, address winner, uint256 prize);
 
-     /* ========== CONSTRUCTOR ========== */
+    /* ========== CONSTRUCTOR ========== */
 
     constructor(address vrfCoordinator, address link, bytes32 _keyhash, uint256 _fee) VRFConsumerBase(vrfCoordinator, link) {
         keyHash = _keyhash;
         fee = _fee;
+
+        pool = PremiumPool(msg.sender);
+        ticket = pool.ticket();
+        createDraw();
     }
 
     /* ========== FUNCTIONS ========== */
@@ -55,10 +62,8 @@ contract DrawController is
     /**
      * @notice create a new draw. Only the Owner contract can create new draws. drawId counter is increased each new draw created.
      */
-    function createDraw()
-        public
-        onlyOwner
-    {
+    function createDraw() public onlyOwner {
+        drawId.increment();
         Draw memory newDraw = Draw({
             drawId: drawId.current(), 
             isOpen: true, 
@@ -66,24 +71,58 @@ contract DrawController is
             endTime: block.timestamp + DRAW_DURATION,
             prize: 0,
             usdcDeposit: 0,
-            participants: new address[](0),
             winner: address(0)
         });
 
         draws[drawId.current()] = newDraw;
-        drawId.increment();
-
-        emit DrawCreated(newDraw.drawId, newDraw.startTime, newDraw.endTime);
+        
+        emit DrawCreated(newDraw.drawId, newDraw.startTime);
     }
 
+    /**
+     * @notice close the draw and request a random number to pick the winner.
+     */
+    function closeDraw() public onlyOwner {
+        Draw storage currentDraw = draws[drawId.current()];
+        require(block.timestamp > currentDraw.endTime,"Draw endtime still not reached");
+        require(!currentDraw.isOpen,"Draw already closed");
+        require(pool.usersCount() != 0, "There has been no participation during this draw");
+
+        currentDraw.isOpen = false;
+        emit CloseDraw(currentDraw.drawId, currentDraw.endTime);
+
+        if(pool.usersCount() == 1) {
+            currentDraw.winner = pool.users(0);
+            (bool success, ) = currentDraw.winner.call{value: currentDraw.prize }("");
+            require(success, "Transfer failed");
+            emit WinnerElected(currentDraw.drawId, currentDraw.winner, currentDraw.prize);
+        } else {
+            require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK in contract");
+            bytes32 requestId = requestRandomness(keyHash, fee);
+            emit RandomnessRequested(requestId, currentDraw.drawId, fee);
+        }
+    }
 
     /**
-     * @notice override required by Solidity.
+     * @notice fulfillRandomness override.
      */
-    function fulfillRandomness(bytes32 requestId, uint256 randomness)
-        internal
-        override
-    {
-        
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+        Draw storage currentDraw = draws[drawId.current()];
+        uint256 count = pool.usersCount();
+        uint256 rnd = randomness % ticket.totalSupply();
+
+        for(uint256 i=0; i<count; i++) {
+            address currentUser = pool.users(i);
+            uint256 balance = ticket.balanceOf(currentUser);
+            if(rnd < balance) {
+                currentDraw.winner = currentUser;
+                (bool success, ) = currentDraw.winner.call{value: currentDraw.prize }("");
+                require(success, "Transfer failed");
+                emit WinnerElected(currentDraw.drawId,currentDraw.winner, currentDraw.prize);
+            }
+            else{
+                rnd -= balance;
+            }
+        }
     }
 }
