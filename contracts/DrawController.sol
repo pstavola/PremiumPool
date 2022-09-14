@@ -33,8 +33,8 @@ contract DrawController is
 
     PremiumPool public pool; // pool instance
     uint256 public constant DRAW_DURATION = 24 hours; //duration of every draw
-    Counters.Counter private drawId;
-    mapping(uint256 => Draw) private draws;
+    uint256 public drawId;
+    mapping(uint256 => Draw) public draws;
     bytes32 private keyHash;
     uint256 private fee;
     IERC20 public ticket; // ticket instance
@@ -63,9 +63,9 @@ contract DrawController is
      * @notice create a new draw. Only the Owner contract can create new draws. drawId counter is increased each new draw created.
      */
     function createDraw() public onlyOwner {
-        drawId.increment();
+        drawId++;
         Draw memory newDraw = Draw({
-            drawId: drawId.current(), 
+            drawId: drawId, 
             isOpen: true, 
             startTime: block.timestamp,
             endTime: block.timestamp + DRAW_DURATION,
@@ -74,7 +74,7 @@ contract DrawController is
             winner: address(0)
         });
 
-        draws[drawId.current()] = newDraw;
+        draws[drawId] = newDraw;
         
         emit DrawCreated(newDraw.drawId, newDraw.startTime);
     }
@@ -83,10 +83,7 @@ contract DrawController is
      * @notice close the draw and request a random number to pick the winner.
      */
     function closeDraw() public onlyOwner {
-        Draw storage currentDraw = draws[drawId.current()];
-        require(block.timestamp > currentDraw.endTime,"Draw endtime still not reached");
-        require(!currentDraw.isOpen,"Draw already closed");
-        require(pool.usersCount() != 0, "There has been no participation during this draw");
+        Draw storage currentDraw = draws[drawId];
 
         currentDraw.isOpen = false;
         emit CloseDraw(currentDraw.drawId, currentDraw.endTime);
@@ -107,7 +104,7 @@ contract DrawController is
      * @notice fulfillRandomness override.
      */
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-        Draw storage currentDraw = draws[drawId.current()];
+        Draw storage currentDraw = draws[drawId];
         uint256 count = pool.usersCount();
         uint256 rnd = randomness % ticket.totalSupply();
 
@@ -124,5 +121,13 @@ contract DrawController is
                 rnd -= balance;
             }
         }
+    }
+
+    function updatePrize(uint256 _prize) public onlyOwner {
+        draws[drawId].prize = _prize;
+    }
+
+    function updateDeposit(uint256 _usdcDeposit) public onlyOwner {
+        draws[drawId].usdcDeposit = _usdcDeposit;
     }
 }
