@@ -23,6 +23,8 @@ contract PremiumPool is
     mapping(address => uint256) public userIndex;
     uint256 public usersCount;
     address[] public users;
+    uint256 public usdcDeposit;
+    uint256 public prize;
 
     /* ========== EVENTS ========== */
 
@@ -77,5 +79,21 @@ contract PremiumPool is
         }
         
         emit Withdraw(msg.sender, _usdcAmount);
-    } 
+    }
+
+    /**
+     * @notice close the draw and request a random number to pick the winner.
+     */
+    function pickWinner() public onlyOwner {
+        uint256 currentDrawId = draw.drawId();
+        (, bool currentDrawIsOpen, , uint256 currentDrawEndTime, uint256 prize, uint256 usdcDeposit, ) = draw.draws(currentDrawId);
+
+        require(block.timestamp > currentDrawEndTime,"Draw endtime still not reached");
+        require(!currentDrawIsOpen,"Draw already closed");
+        require(usersCount != 0, "There has been no participation during this draw");
+
+        draw.updatePrize(prize);
+        draw.updateDeposit(usdcDeposit);
+        draw.closeDraw();
+    }
 }
