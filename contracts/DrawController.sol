@@ -84,20 +84,12 @@ contract DrawController is
      */
     function closeDraw() public onlyOwner {
         Draw storage currentDraw = draws[drawId];
-
         currentDraw.isOpen = false;
         emit CloseDraw(currentDraw.drawId, currentDraw.endTime);
 
-        if(pool.usersCount() == 1) {
-            currentDraw.winner = pool.users(0);
-            (bool success, ) = currentDraw.winner.call{value: currentDraw.prize }("");
-            require(success, "Transfer failed");
-            emit WinnerElected(currentDraw.drawId, currentDraw.winner, currentDraw.prize);
-        } else {
-            require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK in contract");
-            bytes32 requestId = requestRandomness(keyHash, fee);
-            emit RandomnessRequested(requestId, currentDraw.drawId, fee);
-        }
+        require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK in contract");
+        bytes32 requestId = requestRandomness(keyHash, fee);
+        emit RandomnessRequested(requestId, currentDraw.drawId, fee);
     }
 
     /**
@@ -115,7 +107,7 @@ contract DrawController is
                 currentDraw.winner = currentUser;
                 (bool success, ) = currentDraw.winner.call{value: currentDraw.prize }("");
                 require(success, "Transfer failed");
-                emit WinnerElected(currentDraw.drawId,currentDraw.winner, currentDraw.prize);
+                emit WinnerElected(currentDraw.drawId, currentDraw.winner, currentDraw.prize);
             }
             else{
                 rnd -= balance;
