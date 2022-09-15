@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
-import "../node_modules/@openzeppelin/contracts/utils/Counters.sol";
 import "../node_modules/@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./PremiumPool.sol";
@@ -17,8 +16,6 @@ contract DrawController is
     Ownable,
     VRFConsumerBase
 {
-    using Counters for Counters.Counter;
-
     struct Draw {
         uint256 drawId;
         bool isOpen;
@@ -37,7 +34,6 @@ contract DrawController is
     mapping(uint256 => Draw) public draws;
     bytes32 private keyHash;
     uint256 private fee;
-    IERC20 public ticket; // ticket instance
 
     /* ========== EVENTS ========== */
 
@@ -53,7 +49,6 @@ contract DrawController is
         fee = _fee;
 
         pool = PremiumPool(msg.sender);
-        ticket = pool.ticket();
         createDraw();
     }
 
@@ -98,6 +93,7 @@ contract DrawController is
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         Draw storage currentDraw = draws[drawId];
         uint256 count = pool.usersCount();
+        IERC20 ticket = pool.ticket(); // ticket instance
         uint256 rnd = randomness % ticket.totalSupply();
 
         for(uint256 i=0; i<count; i++) {
