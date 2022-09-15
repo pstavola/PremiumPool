@@ -85,10 +85,10 @@ contract PremiumPool is
         require(userDepositedUsdc[msg.sender] >= _usdcAmount, "You cannot withdraw more than deposited!");
 
         ticket.transferFrom(msg.sender, address(this), _usdcAmount);
-        aToken.redeem(_usdcAmount);
-        usdc.transfer(msg.sender, _usdcAmount);
+        withdrawFromAave(_usdcAmount, msg.sender);
 
         userDepositedUsdc[msg.sender] -= _usdcAmount;
+        usdcDeposit -= _usdcAmount;
         if(userDepositedUsdc[msg.sender] == 0){
             usersCount--;
             delete users[userIndex[msg.sender]];
@@ -96,6 +96,15 @@ contract PremiumPool is
         }
 
         emit Withdraw(msg.sender, _usdcAmount);
+    }
+
+    /**
+     * @notice redeem aave tokens
+     * @param _usdcAmount usdc amount
+     */
+    function withdrawFromAave(uint256 _usdcAmount, address _to) public {
+        aToken.approve(address(aPool), _usdcAmount);
+        aPool.withdraw(address(usdc), _usdcAmount, _to);
     }
 
     /**
@@ -110,7 +119,7 @@ contract PremiumPool is
         require(usersCount != 0, "There has been no participation during this draw");
 
         prize = aToken.balanceOf(address(this)) - usdcDeposit;
-        aToken.redeem(prize);
+        withdrawFromAave(prize, address(this));
 
         draw.updatePrize(prize);
         draw.updateDeposit(usdcDeposit);
