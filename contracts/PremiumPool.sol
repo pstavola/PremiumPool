@@ -57,13 +57,21 @@ contract PremiumPool is
 
         if(userIndex[msg.sender] == 0) {
             usersCount++;
-            users.push(msg.sender);
             userIndex[msg.sender] = users.length;
+            users.push(msg.sender);
         }
         userDepositedUsdc[msg.sender] += _usdcAmount;
         usdcDeposit += _usdcAmount;
         usdc.transferFrom(msg.sender, address(this), _usdcAmount);
-        ticket.transferFrom(address(this), msg.sender, _usdcAmount);
+        ticket.transfer(msg.sender, _usdcAmount);
+        depositToAave(_usdcAmount);
+    }
+
+    /**
+     * @notice deposit to aave pool
+     */
+    function depositToAave(uint256 _usdcAmount) public {
+        usdc.approve(address(aPool), _usdcAmount);
         aPool.deposit(address(usdc), _usdcAmount, 0);
         
         emit Deposit(msg.sender, _usdcAmount);
@@ -78,7 +86,7 @@ contract PremiumPool is
 
         ticket.transferFrom(msg.sender, address(this), _usdcAmount);
         aToken.redeem(_usdcAmount);
-        usdc.transferFrom(address(this), msg.sender, _usdcAmount);
+        usdc.transfer(msg.sender, _usdcAmount);
 
         userDepositedUsdc[msg.sender] -= _usdcAmount;
         if(userDepositedUsdc[msg.sender] == 0){
@@ -97,8 +105,8 @@ contract PremiumPool is
         uint256 currentDrawId = draw.drawId();
         (, bool currentDrawIsOpen, , uint256 currentDrawEndTime, , , ) = draw.draws(currentDrawId);
 
-        require(block.timestamp > currentDrawEndTime,"Draw endtime still not reached");
-        require(!currentDrawIsOpen,"Draw already closed");
+        require(block.timestamp >= currentDrawEndTime,"Draw endtime still not reached");
+        require(currentDrawIsOpen, "Draw already closed");
         require(usersCount != 0, "There has been no participation during this draw");
 
         prize = aToken.balanceOf(address(this)) - usdcDeposit;
