@@ -6,6 +6,7 @@ import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ILendingPool.sol";
 import "./interfaces/IAToken.sol";
 import "./DrawController.sol";
+import "./Ticket.sol";
 
 /**
  * @title PremiumPool
@@ -20,7 +21,7 @@ contract PremiumPool is
 
     DrawController public draw; // draw controller instance
     IERC20 public usdc; // $USDC instance
-    IERC20 public ticket; // ticket instance
+    PremiumPoolTicket public ticket; // ticket instance
     ILendingPool public aPool; // aave usdc lending pool
     IAToken public aToken; // aave interest bearing token
 
@@ -38,9 +39,9 @@ contract PremiumPool is
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _usdc, address _ticket, address _aPool, address _aToken, address vrfCoordinator, address link, bytes32 _keyhash, uint256 _fee) {
+    constructor(address _usdc, address _aPool, address _aToken, address vrfCoordinator, address link, bytes32 _keyhash, uint256 _fee) {
         usdc = IERC20(_usdc);
-        ticket = IERC20(_ticket);
+        ticket = new PremiumPoolTicket();
         aPool = ILendingPool(_aPool);
         aToken = IAToken(_aToken);
         draw = new DrawController(vrfCoordinator, link, _keyhash, _fee);
@@ -63,7 +64,7 @@ contract PremiumPool is
         userDepositedUsdc[msg.sender] += _usdcAmount;
         usdcDeposit += _usdcAmount;
         usdc.transferFrom(msg.sender, address(this), _usdcAmount);
-        ticket.transfer(msg.sender, _usdcAmount);
+        ticket.mint(msg.sender, _usdcAmount);
         depositToAave(_usdcAmount);
     }
 
@@ -84,7 +85,7 @@ contract PremiumPool is
     function withdraw(uint256 _usdcAmount) public {
         require(userDepositedUsdc[msg.sender] >= _usdcAmount, "You cannot withdraw more than deposited!");
 
-        ticket.transferFrom(msg.sender, address(this), _usdcAmount);
+        ticket.burn(msg.sender, _usdcAmount);
         withdrawFromAave(_usdcAmount, msg.sender);
 
         userDepositedUsdc[msg.sender] -= _usdcAmount;
@@ -119,10 +120,31 @@ contract PremiumPool is
         require(usersCount != 0, "There has been no participation during this draw");
 
         prize = aToken.balanceOf(address(this)) - usdcDeposit;
-        withdrawFromAave(prize, address(this));
+        require(prize > 0, "There is no winning prize for this draw");
 
         draw.updatePrize(prize);
         draw.updateDeposit(usdcDeposit);
         draw.closeDraw();
+
+        (, , , , , , address winner) = draw.draws(currentDrawId);
+        userDepositedUsdc[winner] += prize;
+        usdcDeposit += prize;
+        ticket.mint(winner, prize);
+
+        createNewDraw();
+    }
+
+    /**
+     * @notice create a new draw
+     */
+    function createNewDraw() public onlyOwner {
+        draw.createDraw();
+    }
+
+    /**
+     * @notice get list of users
+     */
+    function getUsers() public view returns (address[] memory) {
+        return users;
     }
 }
