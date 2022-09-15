@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 import "../node_modules/@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
-import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./PremiumPool.sol";
 
 /**
@@ -92,17 +91,14 @@ contract DrawController is
      */
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         Draw storage currentDraw = draws[drawId];
-        uint256 count = pool.usersCount();
-        IERC20 ticket = pool.ticket(); // ticket instance
-        uint256 rnd = randomness % ticket.totalSupply();
+        address[] memory users = pool.getUsers();
+        uint256 rnd = randomness % pool.usdcDeposit();
 
-        for(uint256 i=0; i<count; i++) {
+        for(uint256 i=0; i<users.length; i++) {
             address currentUser = pool.users(i);
-            uint256 balance = ticket.balanceOf(currentUser);
+            uint256 balance = pool.userDepositedUsdc(currentUser);
             if(rnd < balance) {
                 currentDraw.winner = currentUser;
-                (bool success, ) = currentDraw.winner.call{value: currentDraw.prize }("");
-                require(success, "Transfer failed");
                 emit WinnerElected(currentDraw.drawId, currentDraw.winner, currentDraw.prize);
             }
             else{
