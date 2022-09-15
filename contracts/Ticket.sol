@@ -10,4 +10,8 @@ contract PremiumPoolTicket is ERC20, Ownable {
     function mint(address _minter, uint256 _amount) public onlyOwner {
         super._mint(_minter , _amount);
     }
+
+    function burn(address _account, uint256 _amount) public onlyOwner {
+        super._burn(_account , _amount);
+    }
 }
