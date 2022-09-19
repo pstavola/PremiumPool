@@ -27,7 +27,7 @@ contract DrawController is
 
     /* ========== GLOBAL VARIABLES ========== */
 
-    PremiumPool public pool; // pool instance
+    PremiumPool immutable pool; // pool instance
     uint256 public constant DRAW_DURATION = 24 hours; //duration of every draw
     uint256 public drawId;
     mapping(uint256 => Draw) public draws;
@@ -48,7 +48,6 @@ contract DrawController is
         fee = _fee;
 
         pool = PremiumPool(msg.sender);
-        createDraw();
     }
 
     /* ========== FUNCTIONS ========== */
@@ -56,7 +55,7 @@ contract DrawController is
     /**
      * @notice create a new draw. Only the Owner contract can create new draws. drawId counter is increased each new draw created.
      */
-    function createDraw() public onlyOwner {
+    function createDraw() external onlyOwner {
         drawId++;
         Draw memory newDraw = Draw({
             drawId: drawId, 
@@ -76,7 +75,7 @@ contract DrawController is
     /**
      * @notice close the draw and request a random number to pick the winner.
      */
-    function closeDraw() public onlyOwner {
+    function closeDraw() external onlyOwner {
         Draw storage currentDraw = draws[drawId];
         currentDraw.isOpen = false;
         emit CloseDraw(currentDraw.drawId, currentDraw.endTime);
