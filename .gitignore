@@ -48,3 +48,4 @@ forge-cache
 /crytic-export/
 yarn.lock
 /lib/
+/cache/
