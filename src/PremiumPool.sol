@@ -19,13 +19,13 @@ contract PremiumPool is
 {
     /* ========== GLOBAL VARIABLES ========== */
 
-    DrawController public draw; // draw controller instance
-    IERC20 public usdc; // $USDC instance
-    PremiumPoolTicket public ticket; // ticket instance
-    ILendingPool public aPool; // aave usdc lending pool
-    IAToken public aToken; // aave interest bearing token
+    DrawController public immutable draw; // draw controller instance
+    IERC20 immutable usdc; // $USDC instance
+    PremiumPoolTicket immutable ticket; // ticket instance
+    ILendingPool immutable aPool; // aave usdc lending pool
+    IAToken immutable aToken; // aave interest bearing token
 
-    mapping(address => uint256) public userIndex;
+    mapping(address => uint256) internal userIndex;
     uint256 public usersCount;
     address[] public users;
     mapping(address => uint256) public userDepositedUsdc;
@@ -71,7 +71,7 @@ contract PremiumPool is
     /**
      * @notice deposit to aave pool
      */
-    function depositToAave(uint256 _usdcAmount) public {
+    function depositToAave(uint256 _usdcAmount) private {
         usdc.approve(address(aPool), _usdcAmount);
         aPool.deposit(address(usdc), _usdcAmount, 0);
         
@@ -103,7 +103,7 @@ contract PremiumPool is
      * @notice redeem aave tokens
      * @param _usdcAmount usdc amount
      */
-    function withdrawFromAave(uint256 _usdcAmount, address _to) public {
+    function withdrawFromAave(uint256 _usdcAmount, address _to) private {
         aToken.approve(address(aPool), _usdcAmount);
         aPool.withdraw(address(usdc), _usdcAmount, _to);
     }
