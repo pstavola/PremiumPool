@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "./PremiumPool.sol";
+import "./Ticket.sol";
 
 /**
  * @title Draw
@@ -28,6 +29,7 @@ contract DrawController is
     /* ========== GLOBAL VARIABLES ========== */
 
     PremiumPool immutable pool; // pool instance
+    PremiumPoolTicket poolTicket; // ticket instance
     uint256 public constant DRAW_DURATION = 24 hours; //duration of every draw
     uint256 public drawId;
     mapping(uint256 => Draw) public draws;
@@ -98,7 +100,12 @@ contract DrawController is
             uint256 balance = pool.userDepositedUsdc(currentUser);
             if(rnd < balance) {
                 currentDraw.winner = currentUser;
-                emit WinnerElected(currentDraw.drawId, currentDraw.winner, currentDraw.prize);
+                uint256 prize = currentDraw.prize;
+                pool.updateUserDepositedUsdc(currentUser, prize);
+                pool.updateUsdcDeposit(prize);
+                poolTicket = PremiumPoolTicket(pool.ticket());
+                poolTicket.mint(currentUser, prize);
+                emit WinnerElected(drawId, currentUser, prize);
             }
             else{
                 rnd -= balance;
