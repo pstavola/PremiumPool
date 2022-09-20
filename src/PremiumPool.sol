@@ -21,7 +21,7 @@ contract PremiumPool is
 
     DrawController public immutable draw; // draw controller instance
     IERC20 immutable usdc; // $USDC instance
-    PremiumPoolTicket immutable ticket; // ticket instance
+    PremiumPoolTicket public immutable ticket; // ticket instance
     ILendingPool immutable aPool; // aave usdc lending pool
     IAToken immutable aToken; // aave interest bearing token
 
@@ -73,7 +73,7 @@ contract PremiumPool is
      */
     function depositToAave(uint256 _usdcAmount) private {
         usdc.approve(address(aPool), _usdcAmount);
-        aPool.deposit(address(usdc), _usdcAmount, 0);
+        aPool.deposit(address(usdc), _usdcAmount, address(this), 0);
         
         emit Deposit(msg.sender, _usdcAmount);
     }
@@ -125,13 +125,6 @@ contract PremiumPool is
         draw.updatePrize(prize);
         draw.updateDeposit(usdcDeposit);
         draw.closeDraw();
-
-        (, , , , , , address winner) = draw.draws(currentDrawId);
-        userDepositedUsdc[winner] += prize;
-        usdcDeposit += prize;
-        ticket.mint(winner, prize);
-
-        createNewDraw();
     }
 
     /**
@@ -146,5 +139,13 @@ contract PremiumPool is
      */
     function getUsers() public view returns (address[] memory) {
         return users;
+    }
+
+    function updateUsdcDeposit(uint256 _usdcDeposit) public {
+        usdcDeposit += _usdcDeposit;
+    }
+
+    function updateUserDepositedUsdc(address _user, uint256 _usdcDeposit) public {
+        userDepositedUsdc[_user] += _usdcDeposit;
     }
 }
