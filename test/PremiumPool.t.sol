@@ -2,14 +2,16 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../src/PremiumPool.sol";
 import "../src/DrawController.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../src/interfaces/IAToken.sol";
+import "../src/Ticket.sol";
 
 contract PremiumPoolTest is Test {
-
     PremiumPool public pool;
     DrawController public draw;
+    PremiumPoolTicket public ticket;
     uint256 forkId;
     address usdc = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
     address aPool = address(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
@@ -18,15 +20,17 @@ contract PremiumPoolTest is Test {
     address link = address(0x514910771AF9Ca656af840dff83E8264EcF986CA);
     bytes32 keyhash = bytes32(0xAA77729D3466CA35AE8D28B3BBAC7CC36A5031EFDC430821C02BC31A238AF445);
     uint256 fee = 2 * (10**18);
+    IERC20 public usdcInstance = IERC20(usdc);
+    IAToken public aTokenInstance = IAToken(aToken);
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
     address charlie = makeAddr("charlie");
-    IERC20 public usdcInstance = IERC20(usdc);
 
     function setUp() public {
         forkId = vm.createSelectFork("https://mainnet.infura.io/v3/1fc7c7c3701c4083b769e561ae251f9a");
         pool = new PremiumPool(usdc, aPool, aToken, vrfCoordinator, link, keyhash, fee);
         draw = pool.draw();
+        ticket = pool.ticket();
         pool.createNewDraw();
         deal(address(link), address(draw), 2 * (10**18));
         deal(address(usdc), alice, 10000 * (10**18));
@@ -42,16 +46,18 @@ contract PremiumPoolTest is Test {
 
     // a. The contract is deployed successfully.
     function testCreateContract() public {
-        vm.selectFork(forkId);
         address[] memory users = pool.getUsers();
         assertEq(users.length, 0);
+    }
 
+    // b. Draw has ben created successfully.
+    function testCreateDraw() public {
         uint256 currentDrawId = draw.drawId();
         (uint256 drawId, , , , , , ) = draw.draws(currentDrawId);
         assertEq(drawId, 1);
     }
 
-    // b. The deployed address is set to the owner.
+    // c. The deployed address is set to the owner.
     function testOwner() public {
         assertEq(pool.owner(), address(this));
     }
@@ -64,7 +70,24 @@ contract PremiumPoolTest is Test {
         pool.deposit(_usdcAmount);
     }
 
-    // d. Cannot withdraw more than deposited.
+    // d. Can make a deposit.
+    function testDeposit(uint256 _usdcAmount) public {
+        _usdcAmount = bound(_usdcAmount, 100 * (10**18), 10000 * (10**18));
+        uint256 aliceBalance = usdcInstance.balanceOf(alice);
+        vm.prank(alice);
+        pool.deposit(_usdcAmount);
+
+        assertEq(pool.usersCount(), 1);
+        assertEq(pool.userIndex(alice), 0);
+        assertEq(pool.users(0), alice);
+        assertEq(pool.userDepositedUsdc(alice), _usdcAmount);
+        assertEq(pool.usdcDeposit(), _usdcAmount);
+        assertEq(usdcInstance.balanceOf(alice), aliceBalance - _usdcAmount);
+        assertEq(ticket.balanceOf(alice), _usdcAmount);
+        //assertEq(aTokenInstance.balanceOf(address(pool)), _usdcAmount);
+    }
+
+    // e. Cannot withdraw more than deposited.
     function testCannotWithdrawMoreThanDeposited(uint256 _usdcAmount) public {
         _usdcAmount = bound(_usdcAmount, 100 * (10**18)+1, 1000 * (10**18));
         vm.startPrank(alice);
@@ -105,4 +128,6 @@ contract PremiumPoolTest is Test {
         vm.expectRevert(abi.encodePacked("Draw already closed"));
         pool.pickWinner();
     }
+
+    
 }
