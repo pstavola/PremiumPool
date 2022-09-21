@@ -2,7 +2,9 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
 import "./PremiumPool.sol";
 import "./Ticket.sol";
 
@@ -14,7 +16,7 @@ import "./Ticket.sol";
  */
 contract DrawController is
     Ownable,
-    VRFConsumerBase
+    VRFConsumerBaseV2
 {
     struct Draw {
         uint256 drawId;
@@ -33,23 +35,31 @@ contract DrawController is
     uint256 public constant DRAW_DURATION = 24 hours; //duration of every draw
     uint256 public drawId;
     mapping(uint256 => Draw) public draws;
-    bytes32 private keyHash;
-    uint256 private fee;
+
+    /* ChainLink VRF v2 parameters */
+    VRFCoordinatorV2Interface immutable coordinator;
+    uint64 immutable subscriptionId;
+    bytes32 immutable keyHash;
+    uint256[] public randomWords;
+    uint256 public requestId;
+    /* */
+    LinkTokenInterface immutable link;
 
     /* ========== EVENTS ========== */
 
     event DrawCreated(uint256 drawId, uint256 startTime);
     event CloseDraw(uint256 drawId, uint256 endTime);
-    event RandomnessRequested(bytes32 requestId, uint256 drawId, uint256 fee);
+    event RandomnessRequested(uint256 requestId, uint256 drawId);
     event WinnerElected(uint256 drawId, address winner, uint256 prize);
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address vrfCoordinator, address link, bytes32 _keyhash, uint256 _fee) VRFConsumerBase(vrfCoordinator, link) {
+    constructor(address vrfCoordinator, address _link, uint64 _subscriptionId, bytes32 _keyhash) VRFConsumerBaseV2(vrfCoordinator) {
+        coordinator = VRFCoordinatorV2Interface(vrfCoordinator);
         keyHash = _keyhash;
-        fee = _fee;
-
+        subscriptionId = _subscriptionId;
         pool = PremiumPool(msg.sender);
+        link = LinkTokenInterface(_link);
     }
 
     /* ========== FUNCTIONS ========== */
@@ -82,18 +92,18 @@ contract DrawController is
         currentDraw.isOpen = false;
         emit CloseDraw(currentDraw.drawId, currentDraw.endTime);
 
-        require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK in contract");
-        bytes32 requestId = requestRandomness(keyHash, fee);
-        emit RandomnessRequested(requestId, currentDraw.drawId, fee);
+        requestId = coordinator.requestRandomWords(keyHash, subscriptionId, 3, 50000, 2);
+        emit RandomnessRequested(requestId, currentDraw.drawId);
     }
 
     /**
-     * @notice fulfillRandomness override.
+     * @notice fulfillRandomWords override.
      */
-    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+    function fulfillRandomWords(uint256, uint256[] memory _randomWords) internal override {
+        randomWords = _randomWords;
         Draw storage currentDraw = draws[drawId];
         address[] memory users = pool.getUsers();
-        uint256 rnd = randomness % pool.usdcDeposit();
+        uint256 rnd = randomWords[0] % pool.usdcDeposit();
 
         for(uint256 i=0; i<users.length; i++) {
             address currentUser = pool.users(i);
@@ -103,8 +113,9 @@ contract DrawController is
                 uint256 prize = currentDraw.prize;
                 pool.updateUserDepositedUsdc(currentUser, prize);
                 pool.updateUsdcDeposit(prize);
-                poolTicket = PremiumPoolTicket(pool.ticket());
-                poolTicket.mint(currentUser, prize);
+                /* poolTicket = PremiumPoolTicket(pool.ticket());
+                poolTicket.mint(currentUser, prize); */
+                pool.mintTicket(currentUser, prize);
                 emit WinnerElected(drawId, currentUser, prize);
             }
             else{
@@ -119,5 +130,13 @@ contract DrawController is
 
     function updateDeposit(uint256 _usdcDeposit) public onlyOwner {
         draws[drawId].usdcDeposit = _usdcDeposit;
+    }
+
+    function cancelVRFSubscription() external {
+        coordinator.cancelSubscription(subscriptionId, msg.sender);
+    }
+  
+    function fundVRFSubscription(uint96 amount) public {
+        link.transferAndCall(address(coordinator), amount, abi.encode(subscriptionId));
     }
 }
