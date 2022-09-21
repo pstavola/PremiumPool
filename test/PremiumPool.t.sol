@@ -19,17 +19,25 @@ contract PremiumPoolTest is Test {
     bytes32 keyhash = bytes32(0xAA77729D3466CA35AE8D28B3BBAC7CC36A5031EFDC430821C02BC31A238AF445);
     uint256 fee = 2 * (10**18);
     address alice = makeAddr("alice");
+    address bob = makeAddr("bob");
+    address charlie = makeAddr("charlie");
+    IERC20 public usdcInstance = IERC20(usdc);
 
     function setUp() public {
         forkId = vm.createSelectFork("https://mainnet.infura.io/v3/1fc7c7c3701c4083b769e561ae251f9a");
         pool = new PremiumPool(usdc, aPool, aToken, vrfCoordinator, link, keyhash, fee);
         draw = pool.draw();
         pool.createNewDraw();
-        IERC20 usdcInstance = IERC20(usdc);
         deal(address(link), address(draw), 2 * (10**18));
-        deal(address(usdc), alice, 1000 * (10**18));
+        deal(address(usdc), alice, 10000 * (10**18));
+        deal(address(usdc), bob, 10000 * (10**18));
+        deal(address(usdc), charlie, 10000 * (10**18));
         vm.prank(alice);
-        usdcInstance.approve(address(pool), 1000 * (10**18));
+        usdcInstance.approve(address(pool), 10000 * (10**18));
+        vm.prank(bob);
+        usdcInstance.approve(address(pool), 10000 * (10**18));
+        vm.prank(charlie);
+        usdcInstance.approve(address(pool), 10000 * (10**18));
     }
 
     // a. The contract is deployed successfully.
@@ -48,7 +56,7 @@ contract PremiumPoolTest is Test {
         assertEq(pool.owner(), address(this));
     }
 
-    // c. Cannot deposit less then 99 USDC.
+    // c. Cannot deposit less then 100 USDC.
     function testCannotDepositLessThan100USDC(uint256 _usdcAmount) public {
         _usdcAmount = bound(_usdcAmount, 1, 99 * (10**18));
         vm.prank(alice);
@@ -80,11 +88,10 @@ contract PremiumPoolTest is Test {
     }
 
     // g. Cannot pick a winner if there is no winning prize
-    function testCannotCloseWithtoutPrize() public {
+    function testCannotCloseWithoutPrize() public {
+        vm.warp(block.timestamp + 24 hours);
         vm.prank(alice);
         pool.deposit(100 * (10**18));
-        vm.warp(block.timestamp + 24 hours);
-        vm.prank(pool.owner());
         vm.expectRevert(abi.encodePacked("There is no winning prize for this draw"));
         pool.pickWinner();
     }
@@ -94,7 +101,7 @@ contract PremiumPoolTest is Test {
         vm.prank(alice);
         pool.deposit(100 * (10**18));
         vm.warp(block.timestamp + 24 hours);
-        vm.prank(pool.owner());
+        pool.pickWinner();
         vm.expectRevert(abi.encodePacked("Draw already closed"));
         pool.pickWinner();
     }
