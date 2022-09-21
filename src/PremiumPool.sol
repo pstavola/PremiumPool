@@ -39,12 +39,12 @@ contract PremiumPool is
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _usdc, address _aPool, address _aToken, address vrfCoordinator, address link, bytes32 _keyhash, uint256 _fee) {
+    constructor(address _usdc, address _aPool, address _aToken, address vrfCoordinator, address _link, uint64 _subscriptionId, bytes32 _keyhash) {
         usdc = IERC20(_usdc);
         ticket = new PremiumPoolTicket();
         aPool = ILendingPool(_aPool);
         aToken = IAToken(_aToken);
-        draw = new DrawController(vrfCoordinator, link, _keyhash, _fee);
+        draw = new DrawController(vrfCoordinator, _link, _subscriptionId, _keyhash);
         users = new address[](0);
     }
 
@@ -64,7 +64,8 @@ contract PremiumPool is
         userDepositedUsdc[msg.sender] += _usdcAmount;
         usdcDeposit += _usdcAmount;
         usdc.transferFrom(msg.sender, address(this), _usdcAmount);
-        ticket.mint(msg.sender, _usdcAmount);
+        (bool success, ) = address(this).call(abi.encodeWithSignature("mintTicket(address,uint256)", msg.sender, _usdcAmount));
+        require(success);
         depositToAave(_usdcAmount);
     }
 
@@ -147,5 +148,10 @@ contract PremiumPool is
 
     function updateUserDepositedUsdc(address _user, uint256 _usdcDeposit) public {
         userDepositedUsdc[_user] += _usdcDeposit;
+    }
+
+    function mintTicket(address _minter, uint256 _amount) external {
+        require(msg.sender == address(this) || msg.sender == address(draw), "You cannot mint tickets!");
+        ticket.mint(_minter, _amount);
     }
 }
