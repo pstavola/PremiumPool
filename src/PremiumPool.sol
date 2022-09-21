@@ -25,7 +25,7 @@ contract PremiumPool is
     ILendingPool immutable aPool; // aave usdc lending pool
     IAToken immutable aToken; // aave interest bearing token
 
-    mapping(address => uint256) internal userIndex;
+    mapping(address => uint256) public userIndex;
     uint256 public usersCount;
     address[] public users;
     mapping(address => uint256) public userDepositedUsdc;
