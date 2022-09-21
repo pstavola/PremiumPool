@@ -111,7 +111,7 @@ contract PremiumPool is
     /**
      * @notice close the draw and request a random number to pick the winner.
      */
-    function pickWinner() public onlyOwner {
+    function pickWinner() public {
         uint256 currentDrawId = draw.drawId();
         (, bool currentDrawIsOpen, , uint256 currentDrawEndTime, , , ) = draw.draws(currentDrawId);
 
