@@ -67,7 +67,7 @@ contract PremiumPoolTest is Test {
         assertEq(pool.owner(), address(this));
     }
 
-    // c. Cannot deposit less then 100 USDC.
+    // d. Cannot deposit less then 100 USDC.
     function testCannotDepositLessThan100USDC(uint256 _usdcAmount) public {
         _usdcAmount = bound(_usdcAmount, 1, 99 * (10**18));
         vm.prank(alice);
@@ -75,7 +75,7 @@ contract PremiumPoolTest is Test {
         pool.deposit(_usdcAmount);
     }
 
-    // d. Can make deposits.
+    // e. Can make deposits.
     function testDeposit(uint256 _aliceAmount, uint256 _bobAmount, uint256 _charlieAmount) public {
         _aliceAmount = bound(_aliceAmount, 100 * (10**18), 1000 * (10**18));
         _bobAmount = bound(_bobAmount, 1001 * (10**18), 5000 * (10**18));
@@ -118,7 +118,7 @@ contract PremiumPoolTest is Test {
         //assertEq(aTokenInstance.balanceOf(address(pool)), _aliceAmount+_bobAmount+_charlieAmount);
     }
 
-    // e. Cannot withdraw more than deposited.
+    // f. Cannot withdraw more than deposited.
     function testCannotWithdrawMoreThanDeposited(uint256 _usdcAmount) public {
         _usdcAmount = bound(_usdcAmount, 100 * (10**18), 10000 * (10**18));
         vm.startPrank(alice);
@@ -128,7 +128,7 @@ contract PremiumPoolTest is Test {
         vm.stopPrank();
     }
 
-    // f. Can withdraw what has been deposited.
+    // g. Can withdraw what has been deposited.
     function testWithdraw(uint256 _aliceAmount, uint256 _bobAmount, uint256 _charlieAmount) public {
         _aliceAmount = bound(_aliceAmount, 100 * (10**18), 1000 * (10**18));
         _bobAmount = bound(_bobAmount, 1001 * (10**18), 5000 * (10**18));
@@ -160,20 +160,20 @@ contract PremiumPoolTest is Test {
         //assertEq(aTokenInstance.balanceOf(address(pool)), _bobAmount+_charlieAmount);
     }
 
-    // g. Cannot pick a winner before endtime is reached.
+    // h. Cannot pick a winner before endtime is reached.
     function testCannotCloseBeforeEndtime() public {
         vm.expectRevert(abi.encodePacked("Draw endtime still not reached"));
         pool.pickWinner();
     }
 
-    // h. Cannot pick a winner if there are no partecipants.
+    // i. Cannot pick a winner if there are no partecipants.
     function testCannotCloseWithtoutPartecipants() public {
         vm.expectRevert(abi.encodePacked("There has been no participation during this draw"));
         skip(24 hours);
         pool.pickWinner();
     }
 
-    // i. Cannot pick a winner if there is no winning prize
+    // j. Cannot pick a winner if there is no winning prize
     function testCannotCloseWithoutPrize() public {
         skip(24 hours);
         vm.prank(alice);
@@ -182,7 +182,7 @@ contract PremiumPoolTest is Test {
         pool.pickWinner();
     }
 
-    // j. Cannot pick a winner if draw is already closed.
+    // k. Cannot pick a winner if draw is already closed.
     function testCannotAlreadyClosed() public {
         vm.prank(alice);
         pool.deposit(100 * (10**18));
@@ -192,7 +192,7 @@ contract PremiumPoolTest is Test {
         pool.pickWinner();
     }
 
-    // k. Can close the draw and pick a winner.
+    // l. Can close the draw and pick a winner.
     function testPickWinner(uint256 _aliceAmount, uint256 _bobAmount, uint256 _charlieAmount, uint256 _randomNum) public {
         _aliceAmount = bound(_aliceAmount, 100 * (10**18), 1000 * (10**18));
         _bobAmount = bound(_bobAmount, 1001 * (10**18), 5000 * (10**18));
