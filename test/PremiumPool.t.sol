@@ -70,31 +70,89 @@ contract PremiumPoolTest is Test {
         pool.deposit(_usdcAmount);
     }
 
-    // d. Can make a deposit.
-    function testDeposit(uint256 _usdcAmount) public {
-        _usdcAmount = bound(_usdcAmount, 100 * (10**18), 10000 * (10**18));
-        uint256 aliceBalance = usdcInstance.balanceOf(alice);
-        vm.prank(alice);
-        pool.deposit(_usdcAmount);
+    // d. Can make deposits.
+    function testDeposit(uint256 _aliceAmount, uint256 _bobAmount, uint256 _charlieAmount) public {
+        _aliceAmount = bound(_aliceAmount, 100 * (10**18), 1000 * (10**18));
+        _bobAmount = bound(_bobAmount, 1001 * (10**18), 5000 * (10**18));
+        _charlieAmount = bound(_charlieAmount, 5001 * (10**18), 10000 * (10**18));
 
-        assertEq(pool.usersCount(), 1);
+        uint256 aliceBalance = usdcInstance.balanceOf(alice);
+        uint256 bobBalance = usdcInstance.balanceOf(bob);
+        uint256 charlieBalance = usdcInstance.balanceOf(charlie);
+
+        vm.prank(alice);
+        pool.deposit(_aliceAmount);
+        vm.roll(block.number+1);
+        vm.prank(bob);
+        pool.deposit(_bobAmount);
+        vm.roll(block.number+1);
+        vm.prank(charlie);
+        pool.deposit(_charlieAmount);
+
+        assertEq(pool.usersCount(), 3);
+        assertEq(pool.usdcDeposit(), _aliceAmount+_bobAmount+_charlieAmount);
+
         assertEq(pool.userIndex(alice), 0);
         assertEq(pool.users(0), alice);
-        assertEq(pool.userDepositedUsdc(alice), _usdcAmount);
-        assertEq(pool.usdcDeposit(), _usdcAmount);
-        assertEq(usdcInstance.balanceOf(alice), aliceBalance - _usdcAmount);
-        assertEq(ticket.balanceOf(alice), _usdcAmount);
-        //assertEq(aTokenInstance.balanceOf(address(pool)), _usdcAmount);
+        assertEq(pool.userDepositedUsdc(alice), _aliceAmount);
+        assertEq(usdcInstance.balanceOf(alice), aliceBalance - _aliceAmount);
+        assertEq(ticket.balanceOf(alice), _aliceAmount);
+
+        assertEq(pool.userIndex(bob), 1);
+        assertEq(pool.users(1), bob);
+        assertEq(pool.userDepositedUsdc(bob), _bobAmount);
+        assertEq(usdcInstance.balanceOf(bob), bobBalance - _bobAmount);
+        assertEq(ticket.balanceOf(bob), _bobAmount);
+
+        assertEq(pool.userIndex(charlie), 2);
+        assertEq(pool.users(2), charlie);
+        assertEq(pool.userDepositedUsdc(charlie), _charlieAmount);
+        assertEq(usdcInstance.balanceOf(charlie), charlieBalance - _charlieAmount);
+        assertEq(ticket.balanceOf(charlie), _charlieAmount);
+
+        //assertEq(aTokenInstance.balanceOf(address(pool)), _aliceAmount+_bobAmount+_charlieAmount);
     }
 
     // e. Cannot withdraw more than deposited.
     function testCannotWithdrawMoreThanDeposited(uint256 _usdcAmount) public {
-        _usdcAmount = bound(_usdcAmount, 100 * (10**18)+1, 1000 * (10**18));
+        _usdcAmount = bound(_usdcAmount, 100 * (10**18), 10000 * (10**18));
         vm.startPrank(alice);
-        pool.deposit(_usdcAmount-1);
+        pool.deposit(_usdcAmount);
         vm.expectRevert(abi.encodePacked("You cannot withdraw more than deposited!"));
-        pool.withdraw(_usdcAmount);
+        pool.withdraw(_usdcAmount+1);
         vm.stopPrank();
+    }
+
+    // f. Can withdraw what has been deposited.
+    function testWithdraw(uint256 _aliceAmount, uint256 _bobAmount, uint256 _charlieAmount) public {
+        _aliceAmount = bound(_aliceAmount, 100 * (10**18), 1000 * (10**18));
+        _bobAmount = bound(_bobAmount, 1001 * (10**18), 5000 * (10**18));
+        _charlieAmount = bound(_charlieAmount, 5001 * (10**18), 10000 * (10**18));
+
+        uint256 aliceBalance = usdcInstance.balanceOf(alice);
+
+        vm.prank(alice);
+        pool.deposit(_aliceAmount);
+        vm.roll(block.number+1);
+        vm.prank(bob);
+        pool.deposit(_bobAmount);
+        vm.roll(block.number+1);
+        vm.prank(charlie);
+        pool.deposit(_charlieAmount);
+        vm.roll(block.number+1);
+        vm.prank(alice);
+        pool.withdraw(_aliceAmount);
+
+        assertEq(pool.usersCount(), 2);
+        assertEq(pool.usdcDeposit(), _bobAmount+_charlieAmount);
+
+        assertEq(pool.userIndex(alice), 0);
+        assertEq(pool.users(0), address(0));
+        assertEq(pool.userDepositedUsdc(alice), 0);
+        assertEq(usdcInstance.balanceOf(alice), aliceBalance);
+        assertEq(ticket.balanceOf(alice), 0);
+
+        //assertEq(aTokenInstance.balanceOf(address(pool)), _bobAmount+_charlieAmount);
     }
 
     // e. Cannot pick a winner before endtime is reached.
@@ -106,13 +164,13 @@ contract PremiumPoolTest is Test {
     // f. Cannot pick a winner if there are no partecipants.
     function testCannotCloseWithtoutPartecipants() public {
         vm.expectRevert(abi.encodePacked("There has been no participation during this draw"));
-        vm.warp(block.timestamp + 24 hours);
+        skip(24 hours);
         pool.pickWinner();
     }
 
     // g. Cannot pick a winner if there is no winning prize
     function testCannotCloseWithoutPrize() public {
-        vm.warp(block.timestamp + 24 hours);
+        skip(24 hours);
         vm.prank(alice);
         pool.deposit(100 * (10**18));
         vm.expectRevert(abi.encodePacked("There is no winning prize for this draw"));
@@ -123,7 +181,7 @@ contract PremiumPoolTest is Test {
     function testCannotAlreadyClosed() public {
         vm.prank(alice);
         pool.deposit(100 * (10**18));
-        vm.warp(block.timestamp + 24 hours);
+        skip(24 hours);
         pool.pickWinner();
         vm.expectRevert(abi.encodePacked("Draw already closed"));
         pool.pickWinner();
