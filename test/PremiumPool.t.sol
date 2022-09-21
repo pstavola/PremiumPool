@@ -197,7 +197,6 @@ contract PremiumPoolTest is Test {
         _aliceAmount = bound(_aliceAmount, 100 * (10**18), 1000 * (10**18));
         _bobAmount = bound(_bobAmount, 1001 * (10**18), 5000 * (10**18));
         _charlieAmount = bound(_charlieAmount, 5001 * (10**18), 10000 * (10**18));
-        _randomNum = bound(_randomNum, 0, type(uint256).max);
 
         vm.prank(alice);
         pool.deposit(_aliceAmount);
