@@ -152,8 +152,15 @@ contract PremiumPool is
     /**
      * @notice get user deposit
      */
-    function getUserDeposti(address _user) public view returns (uint256) {
+    function getUserDeposit(address _user) public view returns (uint256) {
         return userDepositedUsdc[_user];
+    }
+
+    /**
+     * @notice get draw address
+     */
+    function getDrawAddress() public view returns (address) {
+        return address(draw);
     }
 
     function updateUsdcDeposit(uint256 _usdcDeposit) public {
