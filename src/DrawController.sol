@@ -113,8 +113,6 @@ contract DrawController is
                 uint256 prize = currentDraw.prize;
                 pool.updateUserDepositedUsdc(currentUser, prize);
                 pool.updateUsdcDeposit(prize);
-                /* poolTicket = PremiumPoolTicket(pool.ticket());
-                poolTicket.mint(currentUser, prize); */
                 pool.mintTicket(currentUser, prize);
                 emit WinnerElected(drawId, currentUser, prize);
             }
@@ -138,5 +136,12 @@ contract DrawController is
   
     function fundVRFSubscription(uint96 amount) public {
         link.transferAndCall(address(coordinator), amount, abi.encode(subscriptionId));
+    }
+
+    /**
+     * @notice get active draw deadline
+     */
+    function getCurrentDrawEndtime() public view returns (uint256) {
+        return draws[drawId].endTime;
     }
 }
