@@ -7,7 +7,7 @@ export const NETWORKS = {
     name: "localhost",
     color: "#666666",
     chainId: 31337,
-    blockExplorer: "",
+    blockExplorer: "https://etherscan.io/",
     rpcUrl: "http://localhost:8545",
   },
   mainnet: {

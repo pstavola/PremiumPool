@@ -12,8 +12,9 @@ export const PoolABI = [
     "function createNewDraw() public onlyOwner",
     "function getUsers() public view returns (address[] memory)",
     "function getTotalDeposit() public view returns (uint256)",
-    "function getUserDeposti(address _user) public view returns (uint256)",
+    "function getUserDeposit(address _user) public view returns (uint256)",
     "function updateUsdcDeposit(uint256 _usdcDeposit) public",
     "function updateUserDepositedUsdc(address _user, uint256 _usdcDeposit) public",
-    "function mintTicket(address _minter, uint256 _amount) external"
+    "function mintTicket(address _minter, uint256 _amount) external",
+    "function getDrawAddress() public view returns (address)"
 ];

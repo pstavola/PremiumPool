@@ -22,7 +22,7 @@ export default function ReadContract(props:Props){
 
     const provider = new ethers.providers.Web3Provider(window.ethereum)
     const pool = new ethers.Contract(addressContract, abi, provider);
-    pool.getUserDeposti(currentAccount).then((result:string)=>{
+    pool.getUserDeposit(currentAccount).then((result:string)=>{
         setUserDeposited(ethers.utils.formatEther(result))
     }).catch('error', console.error)
 
