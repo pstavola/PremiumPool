@@ -1,4 +1,4 @@
-export const TicketABI = [
+export const ERC20ABI = [
     "function balanceOf(address owner) view returns (uint256)",
     "function totalSupply() view returns (uint256)",
     "function decimals() view returns (uint8)",

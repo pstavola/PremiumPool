@@ -9,6 +9,8 @@ import { useState, useEffect} from 'react'
 import {ethers} from "ethers"
 // @ts-ignore
 import ReadContract from './components/ReadContract.tsx'
+// @ts-ignore
+import Deposit from './components/Deposit.tsx'
 
 declare let window:any
 
@@ -85,10 +87,19 @@ const Home: NextPage = () => {
             }
 
             <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                <Heading my={4}  fontSize='xl'>Read ClassToken Info</Heading>
+                <Heading my={4}  fontSize='xl'>Read PremiumPool Info</Heading>
                 <ReadContract
-                    addressContract='0x5fbdb2315678afecb367f032d93f642f64180aa3'
-                    currentAccount={currentAccount}
+                    addressPoolContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
+                    addressUsdcContract='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+                    currentAccount='0x20Df8B290c61094c1AE47827d03eB55e769eED9a'
+                />
+            </Box>
+
+            <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
+                <Heading my={4}  fontSize='xl'>Deposit $USDC</Heading>
+                <Deposit 
+                    addressPoolContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
+                    currentAccount='0x20Df8B290c61094c1AE47827d03eB55e769eED9a'
                 />
             </Box>
         </VStack>
