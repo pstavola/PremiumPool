@@ -142,6 +142,20 @@ contract PremiumPool is
         return users;
     }
 
+    /**
+     * @notice get total deposit
+     */
+    function getTotalDeposit() public view returns (uint256) {
+        return usdcDeposit;
+    }
+
+    /**
+     * @notice get user deposit
+     */
+    function getUserDeposti(address _user) public view returns (uint256) {
+        return userDepositedUsdc[_user];
+    }
+
     function updateUsdcDeposit(uint256 _usdcDeposit) public {
         usdcDeposit += _usdcDeposit;
     }
