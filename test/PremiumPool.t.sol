@@ -240,4 +240,14 @@ contract PremiumPoolTest is Test {
             assertEq(ticket.balanceOf(charlie), charlieBalance + currentDrawPrize);
         }
     }
+
+    // m. Ticket can be minted only by owner address (PremiumPool contract).
+    function testMintToken(uint256 _usdcAmount) public {
+        vm.prank(address(pool));
+        ticket.mint(address(pool), _usdcAmount);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodePacked("Ownable: caller is not the owner"));
+        ticket.mint(alice, _usdcAmount);
+    }
 }
