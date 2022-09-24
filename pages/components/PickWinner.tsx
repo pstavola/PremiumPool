@@ -32,12 +32,12 @@ export default function PickWinner(props:Props){
         tr.wait().then((receipt:TransactionReceipt)=>{console.log("pickWinner receipt",receipt)})
       })
       .catch((e:Error)=>console.log(e))
- }
+  }
 
   return (
     <form onSubmit={pick}>
     <FormControl>
-      <Button type="submit" isDisabled={!currentAccount}>Pick Winner</Button>
+        <Button type="submit" isDisabled={!currentAccount}> 🚀 🎖 👩‍🚀 Pick Winner! 🎉 🍾 🔥</Button>
     </FormControl>
     </form>
   )

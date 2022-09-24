@@ -19,6 +19,8 @@ import Withdraw from './components/Withdraw.tsx'
 import PickWinner from './components/PickWinner.tsx'
 // @ts-ignore
 import USDC from './components/USDC.tsx'
+// @ts-ignore
+import Timeleft from './components/Timeleft.tsx'
 
 const targetNetwork = NETWORKS.localhost;
 const localProviderUrl = targetNetwork.rpcUrl;
@@ -76,9 +78,7 @@ const Home: NextPage = () => {
 
     useEffect(() => {
         async function getInfo() {
-            const web3Modal = await getWeb3Modal()
-            const connection = await web3Modal.connect()
-            const provider = new ethers.providers.Web3Provider(connection)
+            const provider = new ethers.providers.Web3Provider(window.ethereum)
             provider.getBalance(currentAccount!).then((result)=>{
                 setBalance(ethers.utils.formatEther(result))
             })
@@ -116,7 +116,7 @@ const Home: NextPage = () => {
                     <LinkOverlay>
                         <Heading my={4}  fontSize='xl'>Account {currentAccount}</Heading>
                         <Text>ETH Balance: {balance}</Text>
-                        <USDC addressUsdcContract='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' currentAccount='0x20Df8B290c61094c1AE47827d03eB55e769eED9a'/>
+                        <USDC addressUsdcContract='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' currentAccount={currentAccount}/>
                         <Text>Chain name: {chainname}</Text>
                         <Text>Chain Id: {chainId}</Text>
                     </LinkOverlay>
@@ -125,37 +125,56 @@ const Home: NextPage = () => {
                 :<></>
             }
 
-            <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                <Heading my={4}  fontSize='xl'>PremiumPool Info</Heading>
-                <ReadContract
-                    addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
-                    currentAccount='0x20Df8B290c61094c1AE47827d03eB55e769eED9a'
-                />
-            </Box>
-
-            <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                <Heading my={4}  fontSize='xl'>Deposit $USDC</Heading>
-                <Deposit 
-                    addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
-                    currentAccount='0x20Df8B290c61094c1AE47827d03eB55e769eED9a'
-                />
-            </Box>
-
-            <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                <Heading my={4}  fontSize='xl'>Withdraw $USDC</Heading>
-                <Withdraw 
-                    addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
-                    currentAccount='0x20Df8B290c61094c1AE47827d03eB55e769eED9a'
-                />
-            </Box>
-
-            <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                <Heading my={4}  fontSize='xl'>Pick Winner</Heading>
-                <PickWinner 
-                    addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
-                    currentAccount='0x20Df8B290c61094c1AE47827d03eB55e769eED9a'
-                />
-            </Box>
+            {currentAccount?
+                <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
+                    <Heading my={4}  fontSize='xl'>PremiumPool Info</Heading>
+                    <ReadContract
+                        addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
+                        currentAccount={currentAccount}
+                    />
+                </Box>
+                :<></>
+            }
+            {currentAccount?
+                <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
+                    <Heading my={4}  fontSize='xl'>Deposit $USDC</Heading>
+                    <Deposit 
+                        addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
+                        currentAccount={currentAccount}
+                    />
+                </Box>
+                :<></>
+            }
+            {currentAccount?
+                <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
+                    <Heading my={4}  fontSize='xl'>Withdraw $USDC</Heading>
+                    <Withdraw 
+                        addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
+                        currentAccount={currentAccount}
+                    />
+                </Box>
+                :<></>
+            }
+            {currentAccount?
+                <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
+                    <Heading my={4}  fontSize='xl'>Timeleft</Heading>
+                    <Timeleft
+                        addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
+                        currentAccount={currentAccount}
+                    />
+                </Box>
+                :<></>
+            }
+            {currentAccount?
+                <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
+                    <Heading my={4}  fontSize='xl'>Pick Winner</Heading>
+                    <PickWinner 
+                        addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
+                        currentAccount={currentAccount}
+                    />
+                </Box>
+                :<></>
+            }
         </VStack>
         </>
     )
