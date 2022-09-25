@@ -15,21 +15,16 @@
     "esModuleInterop": true,
     "module": "esnext",
     "resolveJsonModule": true,
+    "moduleResolution": "node",
     "isolatedModules": true,
     "jsx": "preserve"
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx",
-    "./test",
-    "./src",
-    "./scripts"
+    "**/*.tsx"
   ],
   "exclude": [
     "node_modules"
-  ],
-  "files": [
-    "./hardhat.config.ts"
   ]
 }
