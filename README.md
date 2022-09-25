@@ -4,28 +4,6 @@
 **Author:** Patrizio Stavola  
 **Date:** 05 September, 2022  
 
-# Deployment  
-  
-Contract deployed and verified to Görli Testnet.  
-Contract address [0x018313a634a75070074d3d1b6f1dd07d3d3057bd](https://goerli.etherscan.io/address/0x018313a634a75070074d3d1b6f1dd07d3d3057bd#writeContract)  
-[Front-end App](https://premium-pool.vercel.app/)  
-
-# Instructions  
-  
-1. Clone the repository  
-		git clone https://github.com/pstavola/PremiumPool.git
-
-2. Install dependencies  
-		yarn install
-
-3. Install Foundry dependencies  
-		forge install --no-commit  
-		forge install openzeppelin/openzeppelin-contracts --no-commit  
-		forge install smartcontractkit/chainlink --no-commit  
-
-4. Run Foundry tests  
-		forge test -vv  
-
 # Overview
 
 A prize savings protocol enabling investors to win by saving. Prizes are generated on the interest earned on deposited funds.
@@ -70,7 +48,45 @@ PremiumPool is a non-custodial protocol. That means no one has the ability to co
 ## Workflow visual
 
 
-![Disegno senza titolo](https://user-images.githubusercontent.com/8236762/192167895-7acd6cb7-b421-4e51-b62b-a722a6d3a774.jpg)
+![Disegno senza titolo](https://user-images.githubusercontent.com/8236762/192167895-7acd6cb7-b421-4e51-b62b-a722a6d3a774.jpg)  
+
+# Deployment  
+  
+Contract deployed and verified to Görli Testnet.  
+Contract address [0x018313a634a75070074d3d1b6f1dd07d3d3057bd](https://goerli.etherscan.io/address/0x018313a634a75070074d3d1b6f1dd07d3d3057bd#writeContract)  
+[Front-end App](https://premium-pool.vercel.app/)  
+
+# Instructions for local installation and tests    
+  
+1. Clone the repository  
+
+		git clone https://github.com/pstavola/PremiumPool.git
+
+2. Install dependencies  
+
+		yarn install
+
+3. Install Foundry dependencies  
+
+		forge install --no-commit  
+		forge install openzeppelin/openzeppelin-contracts --no-commit  
+		forge install smartcontractkit/chainlink --no-commit  
+
+4. Run Foundry tests  
+
+		forge test -vv  
+
+# Instructions for UI testing  
+
+Draw is triggered automatically every 24 hours via ChainLink Keepers. For the sake of testing I removed the hard constraint about respecting draw end-time and I added a button to invoke PickWinner function.  
+These are the steps to follow to use the app:  
+
+	a) Access the Front-end App  
+	b) Connect Metamask Account  
+	c) Deposit $USDC  
+	d) (Optional) Withdraw $USDC  
+	e) Click "Pick a Winner" or wait for draw end-time.  
+
 
 
 
