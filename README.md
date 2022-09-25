@@ -82,10 +82,11 @@ Draw is triggered automatically every 24 hours via ChainLink Keepers. For the sa
 These are the steps to follow to use the app:  
 
 	a) Access the Front-end App  
-	b) Connect Metamask Account  
-	c) Deposit $USDC  
-	d) (Optional) Withdraw $USDC  
-	e) Click "Pick a Winner" or wait for draw end-time.  
+	b) Connect Metamask Account 
+	c) Approve $USDC spending by PremiumPool contract
+	d) Deposit $USDC  
+	e) (Optional) Withdraw $USDC  
+	f) Click "Pick a Winner" or wait for draw end-time.  
 
 
 
