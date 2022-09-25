@@ -42,7 +42,7 @@ export default function Deposit(props:Props){
         <form onSubmit={deposit}>
         <FormControl my={4}>
         <FormLabel htmlFor='amount'></FormLabel>
-        <NumberInput defaultValue={amount} min={100} onChange={handleChange}>
+        <NumberInput defaultValue={amount} min={0} onChange={handleChange}>
             <NumberInputField />
         </NumberInput>
         <Button type="submit" color='red' isDisabled={!currentAccount}>⬇️ Deposit $USDC</Button>
