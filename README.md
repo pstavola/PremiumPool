@@ -1,9 +1,30 @@
 # PremiumPool
 
-**Project:** PremiumPool
-**Author:** Patrizio Stavola
-**Date:** 05 September, 2022
+**Project:** PremiumPool  
+**Author:** Patrizio Stavola  
+**Date:** 05 September, 2022  
 
+# Deployment  
+  
+Contract deployed and verified to Görli Testnet.
+Contract address [0x018313a634a75070074d3d1b6f1dd07d3d3057bd](https://goerli.etherscan.io/address/0x018313a634a75070074d3d1b6f1dd07d3d3057bd#writeContract)
+[Front-end App](https://premium-pool.vercel.app/)
+
+# Instructions  
+  
+1. Clone the repository
+		git clone https://github.com/pstavola/PremiumPool.git
+
+2. Install dependencies
+		yarn install
+
+3. Install Foundry dependencies
+		forge install --no-commit
+		forge install openzeppelin/openzeppelin-contracts --no-commit
+		forge install smartcontractkit/chainlink --no-commit
+
+4. Run Foundry tests
+		forge test -vv
 
 # Overview
 
@@ -17,17 +38,14 @@ PremiumPool is a non-custodial protocol. That means no one has the ability to co
 
 1.  Web App: A user-friendly web application that allows users to.
 
-	a) Connect their wallets.
-	b) Deposit $USDC to be eligible for the next draw.
-	c) Browse all the past draws’ winners.
-	d) Explore the following information of the draw page
+	a) Connect their wallets.  
+	b) Deposit $USDC to be eligible for the next draw.  
+	c) Explore the following information of the draw page:  
 	
 		1.  Draw countdown
 		2.  Network selected
-		3.  Prize APR
-		4.  Daily winning odds
-		5.  Deposit amount
-		6.  Withdraw button
+		3.  Deposit amount
+		4.  Withdraw button
 
 2. Smart Contracts: A set of smart-contract to perform everything on-chain to maintain transparency.
 
@@ -45,9 +63,7 @@ PremiumPool is a non-custodial protocol. That means no one has the ability to co
 
 	c) **Ticket**
 
-		1. An extension of the standard ERC20 interface with time-weighted average balance functionality.
-		2. A mapping to keep track of token holders TWAB for each account.
-		3. Average balance between two timestamps calculation function.
+		1. An ERC20 standard token.
 
 
 
