@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
-import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ILendingPool.sol";
 import "./interfaces/IAToken.sol";
 import "./DrawController.sol";
@@ -19,11 +19,11 @@ contract PremiumPool is
 {
     /* ========== GLOBAL VARIABLES ========== */
 
-    DrawController public draw; // draw controller instance
-    IERC20 public usdc; // $USDC instance
-    PremiumPoolTicket public ticket; // ticket instance
-    ILendingPool public aPool; // aave usdc lending pool
-    IAToken public aToken; // aave interest bearing token
+    DrawController public immutable draw; // draw controller instance
+    IERC20 immutable usdc; // $USDC instance
+    PremiumPoolTicket public immutable ticket; // ticket instance
+    ILendingPool immutable aPool; // aave usdc lending pool
+    IAToken immutable aToken; // aave interest bearing token
 
     mapping(address => uint256) public userIndex;
     uint256 public usersCount;
@@ -34,17 +34,17 @@ contract PremiumPool is
 
     /* ========== EVENTS ========== */
 
-    event Deposit(address user, uint256 usdcAmount);
-    event Withdraw(address user, uint256 usdcAmount);
+    event Deposit(address indexed user, uint256 usdcAmount);
+    event Withdraw(address indexed user, uint256 usdcAmount);
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _usdc, address _aPool, address _aToken, address vrfCoordinator, address link, bytes32 _keyhash, uint256 _fee) {
+    constructor(address _usdc, address _aPool, address _aToken, address vrfCoordinator, address _link, uint64 _subscriptionId, bytes32 _keyhash) {
         usdc = IERC20(_usdc);
         ticket = new PremiumPoolTicket();
         aPool = ILendingPool(_aPool);
         aToken = IAToken(_aToken);
-        draw = new DrawController(vrfCoordinator, link, _keyhash, _fee);
+        draw = new DrawController(vrfCoordinator, _link, _subscriptionId, _keyhash);
         users = new address[](0);
     }
 
@@ -64,16 +64,17 @@ contract PremiumPool is
         userDepositedUsdc[msg.sender] += _usdcAmount;
         usdcDeposit += _usdcAmount;
         usdc.transferFrom(msg.sender, address(this), _usdcAmount);
-        ticket.mint(msg.sender, _usdcAmount);
+        (bool success, ) = address(this).call(abi.encodeWithSignature("mintTicket(address,uint256)", msg.sender, _usdcAmount));
+        require(success);
         depositToAave(_usdcAmount);
     }
 
     /**
      * @notice deposit to aave pool
      */
-    function depositToAave(uint256 _usdcAmount) public {
+    function depositToAave(uint256 _usdcAmount) private {
         usdc.approve(address(aPool), _usdcAmount);
-        aPool.deposit(address(usdc), _usdcAmount, 0);
+        aPool.deposit(address(usdc), _usdcAmount, address(this), 0);
         
         emit Deposit(msg.sender, _usdcAmount);
     }
@@ -103,7 +104,7 @@ contract PremiumPool is
      * @notice redeem aave tokens
      * @param _usdcAmount usdc amount
      */
-    function withdrawFromAave(uint256 _usdcAmount, address _to) public {
+    function withdrawFromAave(uint256 _usdcAmount, address _to) private {
         aToken.approve(address(aPool), _usdcAmount);
         aPool.withdraw(address(usdc), _usdcAmount, _to);
     }
@@ -111,7 +112,7 @@ contract PremiumPool is
     /**
      * @notice close the draw and request a random number to pick the winner.
      */
-    function pickWinner() public onlyOwner {
+    function pickWinner() public {
         uint256 currentDrawId = draw.drawId();
         (, bool currentDrawIsOpen, , uint256 currentDrawEndTime, , , ) = draw.draws(currentDrawId);
 
@@ -125,13 +126,6 @@ contract PremiumPool is
         draw.updatePrize(prize);
         draw.updateDeposit(usdcDeposit);
         draw.closeDraw();
-
-        (, , , , , , address winner) = draw.draws(currentDrawId);
-        userDepositedUsdc[winner] += prize;
-        usdcDeposit += prize;
-        ticket.mint(winner, prize);
-
-        createNewDraw();
     }
 
     /**
@@ -146,5 +140,46 @@ contract PremiumPool is
      */
     function getUsers() public view returns (address[] memory) {
         return users;
+    }
+
+    /**
+     * @notice get total deposit
+     */
+    function getTotalDeposit() public view returns (uint256) {
+        return usdcDeposit;
+    }
+
+    /**
+     * @notice get user deposit
+     */
+    function getUserDeposit(address _user) public view returns (uint256) {
+        return userDepositedUsdc[_user];
+    }
+
+    /**
+     * @notice get draw address
+     */
+    function getDrawAddress() public view returns (address) {
+        return address(draw);
+    }
+
+    /**
+     * @notice get draw address
+     */
+    function getTimeLeft() public view returns (uint256) {
+        return draw.timeLeft();
+    }
+
+    function updateUsdcDeposit(uint256 _usdcDeposit) public {
+        usdcDeposit += _usdcDeposit;
+    }
+
+    function updateUserDepositedUsdc(address _user, uint256 _usdcDeposit) public {
+        userDepositedUsdc[_user] += _usdcDeposit;
+    }
+
+    function mintTicket(address _minter, uint256 _amount) external {
+        require(msg.sender == address(this) || msg.sender == address(draw), "You cannot mint tickets!");
+        ticket.mint(_minter, _amount);
     }
 }

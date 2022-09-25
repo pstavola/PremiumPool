@@ -41,13 +41,11 @@ coverage.json
 typechain
 typechain-types
 
-#Hardhat files
-cache
-artifacts
-
 #Foundry files
 /out/
 forge-cache
 
 /crytic-export/
 yarn.lock
+/lib/
+/cache/
