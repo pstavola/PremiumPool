@@ -15,8 +15,8 @@ export function Layout(props: Props) {
       <Container maxW="container.md" py='8'>
         {props.children}
       </Container>
-      <Center as="footer" bg={useColorModeValue('gray.100', 'gray.700')} p={6}>
-          <Text fontSize="md">patricius 2022</Text>
+      <Center as="footer" bg={useColorModeValue('purple.100', 'purple.700')} p={6}>
+          <Text fontSize="md" color='purple'>patricius/2022</Text>
       </Center>
     </div>
   )

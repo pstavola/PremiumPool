@@ -1,6 +1,6 @@
 export const PoolABI = [
-    "event Deposit(address user, uint256 usdcAmount)",
-    "event Withdraw(address user, uint256 usdcAmount)",
+    "event Deposit(address indexed user, uint256 usdcAmount)",
+    "event Withdraw(address indexed user, uint256 usdcAmount)",
 
     "constructor(address _usdc, address _aPool, address _aToken, address vrfCoordinator, address _link, uint64 _subscriptionId, bytes32 _keyhash)",
 
@@ -16,5 +16,6 @@ export const PoolABI = [
     "function updateUsdcDeposit(uint256 _usdcDeposit) public",
     "function updateUserDepositedUsdc(address _user, uint256 _usdcDeposit) public",
     "function mintTicket(address _minter, uint256 _amount) external",
-    "function getDrawAddress() public view returns (address)"
+    "function getDrawAddress() public view returns (address)",
+    "function getTimeLeft() public view returns(uint256)"
 ];

@@ -1,14 +1,14 @@
 // pages/index.tsx
-import React, { ReactNode, useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import NextLink from "next/link"
 import { VStack, Heading, Box, LinkOverlay, LinkBox} from "@chakra-ui/layout"
-import { Text, Button } from '@chakra-ui/react'
+import { Text, Button, Link } from '@chakra-ui/react'
 import {ethers} from "ethers"
 import Web3Modal from 'web3modal'
 import WalletConnectProvider from '@walletconnect/web3-provider'
-import { INFURA_ID, NETWORK, NETWORKS } from "../constants";
+import { INFURA_ID, NETWORKS } from "../constants";
 // @ts-ignore
 import ReadContract from './components/ReadContract.tsx'
 // @ts-ignore
@@ -16,15 +16,15 @@ import Deposit from './components/Deposit.tsx'
 // @ts-ignore
 import Withdraw from './components/Withdraw.tsx'
 // @ts-ignore
-import PickWinner from './components/PickWinner.tsx'
-// @ts-ignore
 import USDC from './components/USDC.tsx'
 // @ts-ignore
-import Timeleft from './components/Timeleft.tsx'
+import {PoolABI as abi} from './abi/PoolABI.tsx'
+// @ts-ignore
+import {ERC20ABI as erc20abi} from './abi/ERC20ABI.tsx'
+import { contractAddress, contractUsdcaddress } from '../config'
+import { message } from 'react-message-popup'
 
 const targetNetwork = NETWORKS.localhost;
-const localProviderUrl = targetNetwork.rpcUrl;
-const localProvider = new ethers.providers.StaticJsonRpcProvider(localProviderUrl);
 const blockExplorer = targetNetwork.blockExplorer;
 
 declare let window:any
@@ -34,6 +34,7 @@ const Home: NextPage = () => {
     const [currentAccount, setCurrentAccount] = useState<string | undefined>()
     const [chainId, setChainId] = useState<number | undefined>()
     const [chainname, setChainName] = useState<string | undefined>()
+    const [userDeposit, setUserDeposited]=useState<string>()
 
     /* web3Modal configuration for enabling wallet access */
     async function getWeb3Modal() {
@@ -77,104 +78,111 @@ const Home: NextPage = () => {
     }
 
     useEffect(() => {
-        async function getInfo() {
-            const provider = new ethers.providers.Web3Provider(window.ethereum)
-            provider.getBalance(currentAccount!).then((result)=>{
-                setBalance(ethers.utils.formatEther(result))
-            })
-            provider.getNetwork().then((result)=>{
-                setChainId(result.chainId)
-                setChainName(result.name)
-            })
-          }
         if(!currentAccount || !ethers.utils.isAddress(currentAccount)) return
         if(!window.ethereum) return
+
+        window.ethereum.on('chainChanged', () => {
+            getInfo();
+        })
+        window.ethereum.on('accountsChanged', () => {
+            changeAccount()
+        })
+
         getInfo();
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum)
+        const pool = new ethers.Contract(contractAddress, abi, provider);
+
+        // listen for changes on an Ethereum address
+        console.log(`listening for Transfer...`)
+
+        const myDeposit = pool.filters.Deposit(currentAccount, null)
+        provider.on(myDeposit, (from, to, amount, event) => {
+            console.log('My Deposit', { from, to, amount, event })
+            queryUserDeposit(window)
+        })
+
+        const myWithdraw = pool.filters.Withdraw(currentAccount, null)
+        provider.on(myWithdraw, (from, to, amount, event) => {
+            console.log('My Withdraw', { from, to, amount, event })
+            queryUserDeposit(window)
+        })
+
+        // remove listener when the component is unmounted
+        return () => {
+            provider.removeAllListeners(myDeposit)
+            provider.removeAllListeners(myWithdraw)
+        }   
     },[currentAccount])
+
+    async function getInfo() {
+        const provider = new ethers.providers.Web3Provider(window.ethereum)
+
+        provider.getBalance(currentAccount!).then((result)=>{
+            setBalance(ethers.utils.formatEther(result))
+        })
+
+        provider.getNetwork().then((result)=>{
+            setChainId(result.chainId)
+            setChainName(result.name)
+        })
+
+        queryUserDeposit(window)
+    }
+
+    async function changeAccount() {
+        const provider = new ethers.providers.Web3Provider(window.ethereum)
+        const accounts = await provider.listAccounts()
+        setCurrentAccount(accounts[0])
+    }
+
+    async function queryUserDeposit(window:any){
+        const provider = new ethers.providers.Web3Provider(window.ethereum)
+        const pool = new ethers.Contract(contractAddress, abi, provider);
+
+        pool.getUserDeposit(currentAccount).then((result:string)=>{
+            setUserDeposited(ethers.utils.formatEther(result))
+        }).catch((err)=>message.error(err.error.data.message, 10000))
+    }
 
     return (
         <>
         <Head>
             <title>PremiumPool</title>
         </Head>
-
-        <Heading as="h3"  my={4}>Deposit now to have a chance to win!</Heading>          
-        <VStack>
+        <VStack color='purple'>
+            <Heading as="h3"  my={4} color='purple'>Deposit now to have a chance to win!</Heading>
             <Box w='100%' my={4}>
             {currentAccount? 
-                <Button type="button" w='100%' onClick={disconnect}>
+                <Button type="button" w='100%' color='red' onClick={disconnect}>
                         Disconnect
                 </Button>
-                : <Button type="button" w='100%' onClick={connect}>
-                        Connect MetaMask
+                : <Button type="button" w='100%' color='red' onClick={connect}>
+                        🔗 Connect MetaMask
                 </Button>
             }
             </Box>
             {currentAccount?
-                <LinkBox  my={4} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                    <NextLink href={blockExplorer + "address/" + currentAccount} passHref>
-                    <LinkOverlay>
-                        <Heading my={4}  fontSize='xl'>Account {currentAccount}</Heading>
-                        <Text>ETH Balance: {balance}</Text>
-                        <USDC addressUsdcContract='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' currentAccount={currentAccount}/>
-                        <Text>Chain name: {chainname}</Text>
-                        <Text>Chain Id: {chainId}</Text>
-                    </LinkOverlay>
-                    </NextLink>
-                </LinkBox>
-                :<></>
-            }
-
-            {currentAccount?
-                <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                    <Heading my={4}  fontSize='xl'>PremiumPool Info</Heading>
-                    <ReadContract
-                        addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
-                        currentAccount={currentAccount}
-                    />
+                <Box  my={4} p={4} w='100%' borderWidth="1px" borderRadius="lg">
+                    <Heading my={4}  fontSize='xl'>
+                        <Link color='purple.500' href={blockExplorer + "address/" + currentAccount}>
+                            Account {currentAccount}
+                        </Link>
+                    </Heading>
+                    <Text>$ETH Balance: {balance}</Text>
+                    <Text>Chain name: {chainname}</Text>
+                    <Text>Chain Id: {chainId}</Text>
+                    <USDC currentAccount={currentAccount}/>
+                    <Text><b>Your $USDC PremiumPool deposit</b>: {userDeposit}</Text>
+                    <Deposit currentAccount= {currentAccount}/>
+                    <Withdraw currentAccount= {currentAccount}/>
                 </Box>
                 :<></>
-            }
-            {currentAccount?
-                <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                    <Heading my={4}  fontSize='xl'>Deposit $USDC</Heading>
-                    <Deposit 
-                        addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
-                        currentAccount={currentAccount}
-                    />
-                </Box>
-                :<></>
-            }
-            {currentAccount?
-                <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                    <Heading my={4}  fontSize='xl'>Withdraw $USDC</Heading>
-                    <Withdraw 
-                        addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
-                        currentAccount={currentAccount}
-                    />
-                </Box>
-                :<></>
-            }
-            {currentAccount?
-                <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                    <Heading my={4}  fontSize='xl'>Timeleft</Heading>
-                    <Timeleft
-                        addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
-                        currentAccount={currentAccount}
-                    />
-                </Box>
-                :<></>
-            }
-            {currentAccount?
-                <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                    <Heading my={4}  fontSize='xl'>Pick Winner</Heading>
-                    <PickWinner 
-                        addressContract='0x627b9a657eac8c3463ad17009a424dfe3fdbd0b1'
-                        currentAccount={currentAccount}
-                    />
-                </Box>
-                :<></>
-            }
+            }  
+            <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
+                <Heading my={4}  fontSize='xl'>PremiumPool Info</Heading>
+                <ReadContract currentAccount= {currentAccount}/>
+            </Box>
         </VStack>
         </>
     )
