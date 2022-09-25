@@ -68,7 +68,7 @@ Contract address [0x018313a634a75070074d3d1b6f1dd07d3d3057bd](https://goerli.eth
 
 3. Install Foundry dependencies  
 
-		forge install --no-commit  
+		forge init --force --no-commit  
 		forge install openzeppelin/openzeppelin-contracts --no-commit  
 		forge install smartcontractkit/chainlink --no-commit  
 
