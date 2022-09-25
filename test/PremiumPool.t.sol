@@ -68,12 +68,12 @@ contract PremiumPoolTest is Test {
     }
 
     // d. Cannot deposit less then 100 USDC.
-    function testCannotDepositLessThan100USDC(uint256 _usdcAmount) public {
+    /* function testCannotDepositLessThan100USDC(uint256 _usdcAmount) public {
         _usdcAmount = bound(_usdcAmount, 1, 99 * (10**18));
         vm.prank(alice);
         vm.expectRevert(abi.encodePacked("minimum deposit is 100 $USDC"));
         pool.deposit(_usdcAmount);
-    }
+    } */
 
     // e. Can make deposits.
     function testDeposit(uint256 _aliceAmount, uint256 _bobAmount, uint256 _charlieAmount) public {
