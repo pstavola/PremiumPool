@@ -34,8 +34,8 @@ contract PremiumPool is
 
     /* ========== EVENTS ========== */
 
-    event Deposit(address user, uint256 usdcAmount);
-    event Withdraw(address user, uint256 usdcAmount);
+    event Deposit(address indexed user, uint256 usdcAmount);
+    event Withdraw(address indexed user, uint256 usdcAmount);
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -161,6 +161,13 @@ contract PremiumPool is
      */
     function getDrawAddress() public view returns (address) {
         return address(draw);
+    }
+
+    /**
+     * @notice get draw address
+     */
+    function getTimeLeft() public view returns (uint256) {
+        return draw.timeLeft();
     }
 
     function updateUsdcDeposit(uint256 _usdcDeposit) public {
