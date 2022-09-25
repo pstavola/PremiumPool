@@ -21,9 +21,15 @@
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "./test",
+    "./src",
+    "./scripts"
   ],
   "exclude": [
     "node_modules"
+  ],
+  "files": [
+    "./hardhat.config.ts"
   ]
 }
