@@ -47,10 +47,10 @@ contract DrawController is
 
     /* ========== EVENTS ========== */
 
-    event DrawCreated(uint256 drawId, uint256 startTime);
-    event CloseDraw(uint256 drawId, uint256 endTime);
-    event RandomnessRequested(uint256 requestId, uint256 drawId);
-    event WinnerElected(uint256 drawId, address winner, uint256 prize);
+    event DrawCreated(uint256 indexed drawId, uint256 startTime);
+    event CloseDraw(uint256 indexed drawId, uint256 endTime);
+    event RandomnessRequested(uint256 indexed requestId, uint256 indexed drawId);
+    event WinnerElected(uint256 indexed drawId, address indexed winner, uint256 prize);
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -139,9 +139,13 @@ contract DrawController is
     }
 
     /**
-     * @notice get active draw deadline
+     * @notice returns the time left before the deadline to the frontend
      */
-    function getCurrentDrawEndtime() public view returns (uint256) {
-        return draws[drawId].endTime;
+    function timeLeft() public view returns(uint256) {
+        uint256 deadline = draws[drawId].endTime;
+        if (block.timestamp>=deadline)
+            return 0;
+        else
+            return deadline-block.timestamp;
     }
 }
