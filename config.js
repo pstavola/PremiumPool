@@ -1,3 +1,3 @@
-export const contractAddress = "0x6b39b761b1b64C8C095BF0e3Bb0c6a74705b4788"
-export const ownerAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-export const contractUsdcaddress = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+export const contractAddress = "0x018313A634A75070074D3D1b6f1DD07d3d3057bd"
+export const ownerAddress = "0x20Df8B290c61094c1AE47827d03eB55e769eED9a"
+export const contractUsdcaddress = "0x07865c6E87B9F70255377e024ace6630C1Eaa37F"
