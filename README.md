@@ -6,25 +6,25 @@
 
 # Deployment  
   
-Contract deployed and verified to Görli Testnet.
-Contract address [0x018313a634a75070074d3d1b6f1dd07d3d3057bd](https://goerli.etherscan.io/address/0x018313a634a75070074d3d1b6f1dd07d3d3057bd#writeContract)
-[Front-end App](https://premium-pool.vercel.app/)
+Contract deployed and verified to Görli Testnet.  
+Contract address [0x018313a634a75070074d3d1b6f1dd07d3d3057bd](https://goerli.etherscan.io/address/0x018313a634a75070074d3d1b6f1dd07d3d3057bd#writeContract)  
+[Front-end App](https://premium-pool.vercel.app/)  
 
 # Instructions  
   
-1. Clone the repository
+1. Clone the repository  
 		git clone https://github.com/pstavola/PremiumPool.git
 
-2. Install dependencies
+2. Install dependencies  
 		yarn install
 
-3. Install Foundry dependencies
-		forge install --no-commit
-		forge install openzeppelin/openzeppelin-contracts --no-commit
-		forge install smartcontractkit/chainlink --no-commit
+3. Install Foundry dependencies  
+		forge install --no-commit  
+		forge install openzeppelin/openzeppelin-contracts --no-commit  
+		forge install smartcontractkit/chainlink --no-commit  
 
-4. Run Foundry tests
-		forge test -vv
+4. Run Foundry tests  
+		forge test -vv  
 
 # Overview
 
