@@ -54,7 +54,7 @@ contract PremiumPool is
      * @notice allows users to deposit usdc. Users must manually approve transfer by contract beforehand
      */
     function deposit(uint256 _usdcAmount) public {
-        require(_usdcAmount >= 100 * (10**18), "minimum deposit is 100 $USDC");
+        // require(_usdcAmount >= 100 * (10**18), "minimum deposit is 100 $USDC");
 
         if(userIndex[msg.sender] == 0) {
             usersCount++;
