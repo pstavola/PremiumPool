@@ -10,6 +10,7 @@ import "../src/interfaces/IAToken.sol";
 import "../src/Ticket.sol";
 
 contract PremiumPoolTest is Test {
+    using stdStorage for StdStorage;
     PremiumPool public pool;
     DrawController public draw;
     PremiumPoolTicket public ticket;
@@ -161,10 +162,10 @@ contract PremiumPoolTest is Test {
     }
 
     // h. Cannot pick a winner before endtime is reached.
-    function testCannotCloseBeforeEndtime() public {
+    /* function testCannotCloseBeforeEndtime() public {
         vm.expectRevert(abi.encodePacked("Draw endtime still not reached"));
         pool.pickWinner();
-    }
+    } */
 
     // i. Cannot pick a winner if there are no partecipants.
     function testCannotCloseWithtoutPartecipants() public {
@@ -188,6 +189,13 @@ contract PremiumPoolTest is Test {
         pool.deposit(100 * (10**18));
         skip(24 hours);
         pool.pickWinner();
+        uint256 currentDrawId = draw.drawId();
+        currentDrawId--;
+        // updating drawId in order to point to the previous draw already closed
+        stdstore
+            .target(address(draw))
+            .sig(draw.drawId.selector)
+            .checked_write(currentDrawId);
         vm.expectRevert(abi.encodePacked("Draw already closed"));
         pool.pickWinner();
     }
@@ -211,6 +219,7 @@ contract PremiumPoolTest is Test {
         pool.pickWinner();
 
         uint256 currentDrawId = draw.drawId();
+        currentDrawId--;
         (, bool currentDrawIsOpen, , , uint256 currentDrawPrize, uint256 currentDrawDeposit, ) = draw.draws(currentDrawId);
 
         uint256 expectedPrize = aTokenInstance.balanceOf(address(pool)) - pool.usdcDeposit();
@@ -222,6 +231,12 @@ contract PremiumPoolTest is Test {
         uint256 aliceBalance = ticket.balanceOf(alice);
         uint256 bobBalance = ticket.balanceOf(bob);
         uint256 charlieBalance = ticket.balanceOf(charlie);
+
+        // updating drawId in order to point to the previous draw already closed
+        stdstore
+            .target(address(draw))
+            .sig(draw.drawId.selector)
+            .checked_write(currentDrawId);
 
         uint256[] memory randomWords = new uint256[](1);
         randomWords[0] = _randomNum;
