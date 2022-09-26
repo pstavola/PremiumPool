@@ -73,7 +73,7 @@ export default function ReadContract(props:Props){
         const pool = new ethers.Contract(contractAddress, abi, provider);
 
         pool.getTotalDeposit().then((result:string)=>{
-            setTotalDeposit(ethers.utils.formatEther(result))
+            setTotalDeposit(ethers.utils.formatUnits(result, 6))
         }).catch('error', console.error);
     }
 

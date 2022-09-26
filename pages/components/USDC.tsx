@@ -52,7 +52,7 @@ export default function USDC(props:Props){
         const erc20 = new ethers.Contract(contractUsdcaddress, erc20abi, provider);
 
         erc20.balanceOf(currentAccount).then((result:number)=>{
-            setBalance(Number(ethers.utils.formatEther(result)))
+            setBalance(Number(ethers.utils.formatUnits(result, 6)))
         }).catch((err)=>message.error(err.error.data.message, 10000))
     } 
 

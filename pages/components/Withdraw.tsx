@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import {Button, NumberInput,  NumberInputField,  FormControl,  FormLabel } from '@chakra-ui/react'
 import {ethers} from 'ethers'
-import {parseEther } from 'ethers/lib/utils'
+import {parseUnits } from 'ethers/lib/utils'
 // @ts-ignore
 import {PoolABI as abi} from '../abi/PoolABI.tsx'
 import { Contract } from "ethers"
@@ -27,7 +27,7 @@ export default function Withdraw(props:Props){
     const signer = provider.getSigner()
     const pool:Contract = new ethers.Contract(contractAddress, abi, signer)
 
-    pool.withdraw(parseEther(amount))
+    pool.withdraw(parseUnits(amount, 6))
       .then((tr: TransactionResponse) => {
         console.log(`TransactionResponse TX hash: ${tr.hash}`)
         tr.wait().then((receipt:TransactionReceipt)=>{console.log("withdraw receipt",receipt)})

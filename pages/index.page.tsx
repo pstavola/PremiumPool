@@ -22,7 +22,7 @@ import {PoolABI as abi} from './abi/PoolABI.tsx'
 // @ts-ignore
 import {ERC20ABI as erc20abi} from './abi/ERC20ABI.tsx'
 import { contractAddress, contractUsdcaddress } from '../config'
-import { message } from 'react-message-popup'
+//import { message } from 'react-message-popup'
 
 const targetNetwork = NETWORKS.localhost;
 const blockExplorer = targetNetwork.blockExplorer;
@@ -141,8 +141,8 @@ const Home: NextPage = () => {
         const pool = new ethers.Contract(contractAddress, abi, provider);
 
         pool.getUserDeposit(currentAccount).then((result:string)=>{
-            setUserDeposited(ethers.utils.formatEther(result))
-        }).catch((err)=>message.error(err.error.data.message, 10000))
+            setUserDeposited(ethers.utils.formatUnits(result, 6))
+        })//.catch((err)=>message.error(err.error.data.message, 10000))
     }
 
     return (
