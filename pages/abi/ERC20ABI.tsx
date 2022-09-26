@@ -6,6 +6,7 @@ export const ERC20ABI = [
     "function mint(address _minter, uint256 _amount) public onlyOwner",
     "function burn(address _account, uint256 _amount) public onlyOwner",
     "function transfer(address to, uint amount) returns (bool)",
+    "function approve(address spender, uint amount) returns (bool)",
 
     "event Transfer(address indexed from, address indexed to, uint amount)"
 ];
