@@ -116,7 +116,7 @@ contract PremiumPool is
         uint256 currentDrawId = draw.drawId();
         (, bool currentDrawIsOpen, , uint256 currentDrawEndTime, , , ) = draw.draws(currentDrawId);
 
-        require(block.timestamp >= currentDrawEndTime,"Draw endtime still not reached");
+        /* require(block.timestamp >= currentDrawEndTime,"Draw endtime still not reached"); */
         require(currentDrawIsOpen, "Draw already closed");
         require(usersCount != 0, "There has been no participation during this draw");
 
@@ -126,6 +126,7 @@ contract PremiumPool is
         draw.updatePrize(prize);
         draw.updateDeposit(usdcDeposit);
         draw.closeDraw();
+        createNewDraw();
     }
 
     /**
