@@ -4,7 +4,7 @@ import { Text} from '@chakra-ui/react'
 import {ERC20ABI as erc20abi} from '../abi/ERC20ABI.tsx'
 import {ethers} from 'ethers'
 import { contractUsdcaddress } from '../../config'
-import { message } from 'react-message-popup'
+//import { message } from 'react-message-popup'
 
 interface Props {
     currentAccount: string | undefined
@@ -53,7 +53,7 @@ export default function USDC(props:Props){
 
         erc20.balanceOf(currentAccount).then((result:number)=>{
             setBalance(Number(ethers.utils.formatUnits(result, 6)))
-        }).catch((err)=>message.error(err.error.data.message, 10000))
+        })//.catch((err)=>message.error(err.error.data.message, 10000))
     } 
 
     return (

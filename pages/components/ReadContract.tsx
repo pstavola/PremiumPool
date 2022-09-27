@@ -2,11 +2,13 @@ import React, { useEffect,useState } from 'react'
 import { Text, FormControl, Button } from '@chakra-ui/react'
 // @ts-ignore
 import {PoolABI as abi} from '../abi/PoolABI.tsx'
+// @ts-ignore
+import {ERC20ABI as erc20abi} from '../abi/ERC20ABI.tsx'
 import { ethers, Contract} from 'ethers'
 import { TransactionResponse,TransactionReceipt } from '@ethersproject/abstract-provider'
-import { contractAddress } from '../../config'
+import { contractAddress, contractTicket } from '../../config'
 import humanizeDuration from 'humanize-duration'
-import { message } from 'react-message-popup'
+//import { message } from 'react-message-popup'
 
 interface Props {
     currentAccount: string | undefined
@@ -31,7 +33,7 @@ export default function ReadContract(props:Props){
             console.log(`TransactionResponse TX hash: ${tr.hash}`)
             tr.wait().then((receipt:TransactionReceipt)=>{console.log("pickWinner receipt",receipt)})
         })
-        .catch((err)=>message.error(err.error.data.message, 10000))
+        //.catch((err)=>message.error(err.error.data.message, 10000))
     }
 
     useEffect( () => {
@@ -70,9 +72,9 @@ export default function ReadContract(props:Props){
 
     async function queryDeposit(window:any){
         const provider = new ethers.providers.Web3Provider(window.ethereum)
-        const pool = new ethers.Contract(contractAddress, abi, provider);
+        const ticket = new ethers.Contract(contractTicket, erc20abi, provider)
 
-        pool.getTotalDeposit().then((result:string)=>{
+        ticket.totalSupply().then((result:string)=>{
             setTotalDeposit(ethers.utils.formatUnits(result, 6))
         }).catch('error', console.error);
     }

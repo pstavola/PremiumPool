@@ -8,7 +8,7 @@ import {PoolABI as abi} from '../abi/PoolABI.tsx'
 import { Contract } from "ethers"
 import { TransactionResponse,TransactionReceipt } from "@ethersproject/abstract-provider"
 import { contractAddress } from '../../config'
-import { message } from 'react-message-popup'
+//import { message } from 'react-message-popup'
 
 interface Props {
     currentAccount: string | undefined
@@ -32,7 +32,7 @@ export default function Withdraw(props:Props){
         console.log(`TransactionResponse TX hash: ${tr.hash}`)
         tr.wait().then((receipt:TransactionReceipt)=>{console.log("withdraw receipt",receipt)})
       })
-      .catch((err)=>message.error(err.error.data.message, 10000))
+      //.catch((err)=>message.error(err.error.data.message, 10000))
  }
 
   const handleChange = (value:string) => setAmount(value)

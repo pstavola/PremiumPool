@@ -7,7 +7,7 @@ import { VStack, Heading, Box, LinkOverlay, LinkBox} from "@chakra-ui/layout"
 import { Text, Button, Link } from '@chakra-ui/react'
 import {ethers} from "ethers"
 import Web3Modal from 'web3modal'
-import WalletConnectProvider from '@walletconnect/web3-provider'
+import WalletConnectProvider from '../node_modules/@walletconnect/web3-provider'
 import { INFURA_ID, NETWORKS } from "../constants";
 // @ts-ignore
 import ReadContract from './components/ReadContract.tsx'
@@ -21,7 +21,7 @@ import USDC from './components/USDC.tsx'
 import {PoolABI as abi} from './abi/PoolABI.tsx'
 // @ts-ignore
 import {ERC20ABI as erc20abi} from './abi/ERC20ABI.tsx'
-import { contractAddress, contractUsdcaddress } from '../config'
+import { contractAddress, contractTicket } from '../config'
 //import { message } from 'react-message-popup'
 
 const targetNetwork = NETWORKS.localhost;
@@ -138,9 +138,9 @@ const Home: NextPage = () => {
 
     async function queryUserDeposit(window:any){
         const provider = new ethers.providers.Web3Provider(window.ethereum)
-        const pool = new ethers.Contract(contractAddress, abi, provider);
+        const ticket = new ethers.Contract(contractTicket, erc20abi, provider)
 
-        pool.getUserDeposit(currentAccount).then((result:string)=>{
+        ticket.balanceOf(currentAccount).then((result:string)=>{
             setUserDeposited(ethers.utils.formatUnits(result, 6))
         })//.catch((err)=>message.error(err.error.data.message, 10000))
     }

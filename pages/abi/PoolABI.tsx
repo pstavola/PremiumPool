@@ -17,5 +17,6 @@ export const PoolABI = [
     "function updateUserDepositedUsdc(address _user, uint256 _usdcDeposit) public",
     "function mintTicket(address _minter, uint256 _amount) external",
     "function getDrawAddress() public view returns (address)",
+    "function getDepositAddress() public view returns (address)",
     "function getTimeLeft() public view returns(uint256)"
 ];
