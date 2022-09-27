@@ -22,6 +22,11 @@ import "./PremiumPoolStorage.sol";
 contract PremiumPool is
     Ownable, PremiumPoolStorage
 {
+    /* ========== EVENTS ========== */
+
+    event Deposit(address indexed user, uint256 usdcAmount);
+    event Withdraw(address indexed user, uint256 usdcAmount);
+    
     /* ========== CONSTRUCTOR ========== */
 
     constructor(address _usdc, address _aPoolAddrProvider, address _aToken, address vrfCoordinator, address _link, uint64 _subscriptionId, bytes32 _keyhash) 
@@ -37,32 +42,23 @@ contract PremiumPool is
             userIndex[msg.sender] = users.length;
             users.push(msg.sender);
         }
-        usdc.transferFrom(msg.sender, address(lending), _usdcAmount);
+
+        lending.deposit(msg.sender, _usdcAmount, address(usdc), address(aPool));
+       
         (bool success, ) = address(this).call(abi.encodeWithSignature("mintTicket(address,uint256)", msg.sender, _usdcAmount));
         require(success);
-        //depositToAave(_usdcAmount);
-        lending.deposit(msg.sender, _usdcAmount, address(usdc), address(aPool));
 
-        //emit Deposit(msg.sender, _usdcAmount);
+        emit Deposit(msg.sender, _usdcAmount);
     }
 
     /**
-     * @notice deposit to aave pool
-     */
-   /*  function depositToAave(uint256 _usdcAmount) private {
-        usdc.approve(address(aPool), _usdcAmount);
-        aPool.deposit(address(usdc), _usdcAmount, address(this), 0);
-    } */
-
-    /**
-     * @notice allows users to withdraw usdc. Users must manually approve transfer by contract beforehand
+     * @notice allows users to withdraw usdc.
      * @param _usdcAmount usdc amount
      */
     function withdraw(uint256 _usdcAmount) public {
         require(ticket.balanceOf(msg.sender) >= _usdcAmount, "You cannot withdraw more than deposited!");
 
         ticket.burn(msg.sender, _usdcAmount);
-        //withdrawFromAave(_usdcAmount, msg.sender);
 
         lending.withdraw(msg.sender, _usdcAmount, address(usdc), address(aToken), address(aPool));
 
@@ -71,17 +67,8 @@ contract PremiumPool is
             userIndex[msg.sender] = 0;
         }
 
-        //emit Withdraw(msg.sender, _usdcAmount);
+        emit Withdraw(msg.sender, _usdcAmount);
     }
-
-    /**
-     * @notice redeem aave tokens
-     * @param _usdcAmount usdc amount
-     */
-    /* function withdrawFromAave(uint256 _usdcAmount, address _to) private {
-        aToken.approve(address(aPool), _usdcAmount);
-        aPool.withdraw(address(usdc), _usdcAmount, _to);
-    } */
 
     /**
      * @notice close the draw and request a random number to pick the winner.
@@ -96,7 +83,7 @@ contract PremiumPool is
 
         uint256 totalDeposit = ticket.totalSupply();
         uint256 prize = aToken.balanceOf(address(this)) - totalDeposit;
-        require(prize > 0, "There is no winning prize for this draw");
+        //require(prize > 0, "There is no winning prize for this draw");
 
         draw.updatePrize(prize);
         draw.updateDeposit(totalDeposit);
@@ -116,13 +103,6 @@ contract PremiumPool is
      */
     function getUsers() public view returns (address[] memory) {
         return users;
-    }
-
-    /**
-     * @notice get draw address
-     */
-    function getDrawAddress() public view returns (address) {
-        return address(draw);
     }
 
     /**

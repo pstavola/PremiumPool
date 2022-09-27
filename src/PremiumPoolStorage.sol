@@ -13,9 +13,9 @@ import "./Ticket.sol";
 import "./LendingController.sol";
 
 /**
- * @title PremiumPool
+ * @title PremiumPoolStorage
  * @author patricius
- * @notice PremiumPool main contract
+ * @notice PremiumPool storage
  * @dev 
  */
 contract PremiumPoolStorage is
