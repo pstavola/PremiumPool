@@ -68,14 +68,6 @@ contract PremiumPoolTest is Test {
         assertEq(pool.owner(), address(this));
     }
 
-    // d. Cannot deposit less then 100 USDC.
-    /* function testCannotDepositLessThan100USDC(uint256 _usdcAmount) public {
-        _usdcAmount = bound(_usdcAmount, 1, 99 * (10**18));
-        vm.prank(alice);
-        vm.expectRevert(abi.encodePacked("minimum deposit is 100 $USDC"));
-        pool.deposit(_usdcAmount);
-    } */
-
     // e. Can make deposits.
     function testDeposit(uint256 _aliceAmount, uint256 _bobAmount, uint256 _charlieAmount) public {
         _aliceAmount = bound(_aliceAmount, 100 * (10**18), 1000 * (10**18));
@@ -95,24 +87,20 @@ contract PremiumPoolTest is Test {
         vm.prank(charlie);
         pool.deposit(_charlieAmount);
 
-        assertEq(pool.usersCount(), 3);
-        assertEq(pool.usdcDeposit(), _aliceAmount+_bobAmount+_charlieAmount);
+        assertEq(ticket.totalSupply(), _aliceAmount+_bobAmount+_charlieAmount);
 
         assertEq(pool.userIndex(alice), 0);
         assertEq(pool.users(0), alice);
-        assertEq(pool.userDepositedUsdc(alice), _aliceAmount);
         assertEq(usdcInstance.balanceOf(alice), aliceBalance - _aliceAmount);
         assertEq(ticket.balanceOf(alice), _aliceAmount);
 
         assertEq(pool.userIndex(bob), 1);
         assertEq(pool.users(1), bob);
-        assertEq(pool.userDepositedUsdc(bob), _bobAmount);
         assertEq(usdcInstance.balanceOf(bob), bobBalance - _bobAmount);
         assertEq(ticket.balanceOf(bob), _bobAmount);
 
         assertEq(pool.userIndex(charlie), 2);
         assertEq(pool.users(2), charlie);
-        assertEq(pool.userDepositedUsdc(charlie), _charlieAmount);
         assertEq(usdcInstance.balanceOf(charlie), charlieBalance - _charlieAmount);
         assertEq(ticket.balanceOf(charlie), _charlieAmount);
 
@@ -149,12 +137,10 @@ contract PremiumPoolTest is Test {
         vm.prank(alice);
         pool.withdraw(_aliceAmount);
 
-        assertEq(pool.usersCount(), 2);
-        assertEq(pool.usdcDeposit(), _bobAmount+_charlieAmount);
+        assertEq(ticket.totalSupply(), _bobAmount+_charlieAmount);
 
         assertEq(pool.userIndex(alice), 0);
         assertEq(pool.users(0), address(0));
-        assertEq(pool.userDepositedUsdc(alice), 0);
         assertEq(usdcInstance.balanceOf(alice), aliceBalance);
         assertEq(ticket.balanceOf(alice), 0);
 
@@ -222,10 +208,11 @@ contract PremiumPoolTest is Test {
         currentDrawId--;
         (, bool currentDrawIsOpen, , , uint256 currentDrawPrize, uint256 currentDrawDeposit, ) = draw.draws(currentDrawId);
 
-        uint256 expectedPrize = aTokenInstance.balanceOf(address(pool)) - pool.usdcDeposit();
+        uint256 totalSupply = ticket.totalSupply();
+        uint256 expectedPrize = aTokenInstance.balanceOf(address(pool)) - totalSupply;
 
         assertEq(currentDrawPrize, expectedPrize);
-        assertEq(currentDrawDeposit, pool.usdcDeposit());
+        assertEq(currentDrawDeposit, totalSupply);
         assertEq(currentDrawIsOpen, false);
 
         uint256 aliceBalance = ticket.balanceOf(alice);

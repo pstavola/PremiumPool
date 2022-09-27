@@ -103,16 +103,15 @@ contract DrawController is
         randomWords = _randomWords;
         Draw storage currentDraw = draws[drawId];
         address[] memory users = pool.getUsers();
-        uint256 rnd = randomWords[0] % pool.usdcDeposit();
+        PremiumPoolTicket ticket = PremiumPoolTicket(address(pool.ticket()));
+        uint256 rnd = randomWords[0] % ticket.totalSupply();
 
         for(uint256 i=0; i<users.length; i++) {
             address currentUser = pool.users(i);
-            uint256 balance = pool.userDepositedUsdc(currentUser);
+            uint256 balance = ticket.balanceOf(currentUser);
             if(rnd < balance) {
                 currentDraw.winner = currentUser;
                 uint256 prize = currentDraw.prize;
-                pool.updateUserDepositedUsdc(currentUser, prize);
-                pool.updateUsdcDeposit(prize);
                 pool.mintTicket(currentUser, prize);
                 emit WinnerElected(drawId, currentUser, prize);
             }

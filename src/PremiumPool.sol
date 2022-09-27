@@ -26,11 +26,7 @@ contract PremiumPool is
     IAToken immutable aToken; // aave interest bearing token
 
     mapping(address => uint256) public userIndex;
-    uint256 public usersCount;
     address[] public users;
-    mapping(address => uint256) public userDepositedUsdc;
-    uint256 public usdcDeposit;
-    uint256 public prize;
 
     /* ========== EVENTS ========== */
 
@@ -54,19 +50,16 @@ contract PremiumPool is
      * @notice allows users to deposit usdc. Users must manually approve transfer by contract beforehand
      */
     function deposit(uint256 _usdcAmount) public {
-        // require(_usdcAmount >= 100 * (10**18), "minimum deposit is 100 $USDC");
-
         if(userIndex[msg.sender] == 0) {
-            usersCount++;
             userIndex[msg.sender] = users.length;
             users.push(msg.sender);
         }
-        userDepositedUsdc[msg.sender] += _usdcAmount;
-        usdcDeposit += _usdcAmount;
         usdc.transferFrom(msg.sender, address(this), _usdcAmount);
         (bool success, ) = address(this).call(abi.encodeWithSignature("mintTicket(address,uint256)", msg.sender, _usdcAmount));
         require(success);
         depositToAave(_usdcAmount);
+
+        emit Deposit(msg.sender, _usdcAmount);
     }
 
     /**
@@ -75,8 +68,6 @@ contract PremiumPool is
     function depositToAave(uint256 _usdcAmount) private {
         usdc.approve(address(aPool), _usdcAmount);
         aPool.deposit(address(usdc), _usdcAmount, address(this), 0);
-        
-        emit Deposit(msg.sender, _usdcAmount);
     }
 
     /**
@@ -84,15 +75,12 @@ contract PremiumPool is
      * @param _usdcAmount usdc amount
      */
     function withdraw(uint256 _usdcAmount) public {
-        require(userDepositedUsdc[msg.sender] >= _usdcAmount, "You cannot withdraw more than deposited!");
+        require(ticket.balanceOf(msg.sender) >= _usdcAmount, "You cannot withdraw more than deposited!");
 
         ticket.burn(msg.sender, _usdcAmount);
         withdrawFromAave(_usdcAmount, msg.sender);
 
-        userDepositedUsdc[msg.sender] -= _usdcAmount;
-        usdcDeposit -= _usdcAmount;
-        if(userDepositedUsdc[msg.sender] == 0){
-            usersCount--;
+        if(ticket.balanceOf(msg.sender) == 0){
             delete users[userIndex[msg.sender]];
             userIndex[msg.sender] = 0;
         }
@@ -118,13 +106,14 @@ contract PremiumPool is
 
         /* require(block.timestamp >= currentDrawEndTime,"Draw endtime still not reached"); */
         require(currentDrawIsOpen, "Draw already closed");
-        require(usersCount != 0, "There has been no participation during this draw");
+        require(ticket.totalSupply() != 0, "There has been no participation during this draw");
 
-        prize = aToken.balanceOf(address(this)) - usdcDeposit;
+        uint256 totalDeposit = ticket.totalSupply();
+        uint256 prize = aToken.balanceOf(address(this)) - totalDeposit;
         require(prize > 0, "There is no winning prize for this draw");
 
         draw.updatePrize(prize);
-        draw.updateDeposit(usdcDeposit);
+        draw.updateDeposit(totalDeposit);
         draw.closeDraw();
         createNewDraw();
     }
@@ -144,20 +133,6 @@ contract PremiumPool is
     }
 
     /**
-     * @notice get total deposit
-     */
-    function getTotalDeposit() public view returns (uint256) {
-        return usdcDeposit;
-    }
-
-    /**
-     * @notice get user deposit
-     */
-    function getUserDeposit(address _user) public view returns (uint256) {
-        return userDepositedUsdc[_user];
-    }
-
-    /**
      * @notice get draw address
      */
     function getDrawAddress() public view returns (address) {
@@ -169,14 +144,6 @@ contract PremiumPool is
      */
     function getTimeLeft() public view returns (uint256) {
         return draw.timeLeft();
-    }
-
-    function updateUsdcDeposit(uint256 _usdcDeposit) public {
-        usdcDeposit += _usdcDeposit;
-    }
-
-    function updateUserDepositedUsdc(address _user, uint256 _usdcDeposit) public {
-        userDepositedUsdc[_user] += _usdcDeposit;
     }
 
     function mintTicket(address _minter, uint256 _amount) external {
