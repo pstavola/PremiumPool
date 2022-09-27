@@ -53,7 +53,7 @@ PremiumPool is a non-custodial protocol. That means no one has the ability to co
 # Deployment  
   
 Contract deployed and verified to Görli Testnet.  
-Contract address [0xAeF19ee0bC2859FA68BF62f8D079250B3a95a911](https://goerli.etherscan.io/address/0x1c08e18bFa242567e1902474f1847dd9262dD5ed#writeContract)  
+Contract address [0xC2265816a443691576D9fad0A03472B5c6F1f590](https://goerli.etherscan.io/address/0xC2265816a443691576D9fad0A03472B5c6F1f590#writeContract)  
 [Front-end App](https://premium-pool.vercel.app/)  
 
 # Instructions for local installation and tests    
