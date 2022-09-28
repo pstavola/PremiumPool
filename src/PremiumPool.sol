@@ -3,10 +3,8 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-//import "./interfaces/ILendingPoolAddressesProvider.sol";
-//import "./interfaces/ILendingPool.sol";
-import "./interfaces/IPoolAddressesProvider.sol";
-import "./interfaces/IPool.sol";
+import "./interfaces/ILendingPoolAddressesProvider.sol";
+import "./interfaces/ILendingPool.sol";
 import "./interfaces/IAToken.sol";
 import "./DrawController.sol";
 import "./Ticket.sol";
@@ -82,7 +80,7 @@ contract PremiumPool is
         require(ticket.totalSupply() != 0, "There has been no participation during this draw");
 
         uint256 totalDeposit = ticket.totalSupply();
-        uint256 prize = aToken.balanceOf(address(this)) - totalDeposit;
+        uint256 prize = aToken.balanceOf(address(lending)) - totalDeposit;
         //require(prize > 0, "There is no winning prize for this draw");
 
         draw.updatePrize(prize);
