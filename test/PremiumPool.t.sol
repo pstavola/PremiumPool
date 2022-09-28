@@ -8,6 +8,7 @@ import "../src/PremiumPool.sol";
 import "../src/DrawController.sol";
 import "../src/interfaces/IAToken.sol";
 import "../src/Ticket.sol";
+import "../src/LendingController.sol";
 
 contract PremiumPoolTest is Test {
     using stdStorage for StdStorage;
@@ -16,13 +17,34 @@ contract PremiumPoolTest is Test {
     PremiumPoolTicket public ticket;
     VRFCoordinatorV2Mock public vrfCoordinator;
     uint256 forkId;
-    address usdc = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
-    address aPool = address(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
+    /** ETHEREUM MAINNET */
+    /* address usdc = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    address aPoolAddrProv = address(0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5);
     address aToken = address(0xBcca60bB61934080951369a648Fb03DF4F96263C);
     address link = address(0x514910771AF9Ca656af840dff83E8264EcF986CA);
-    //address vrfCoordinator = address(0xf0d54349aDdcf704F77AE15b96510dEA15cb7952);
+    bytes32 keyhash = bytes32(0x8af398995b04c28e9951adb9721ef74c74f93e6a478f39e7e0777be13527e7ef); */
+    /** ETHEREUM GOERLI */
+    /* address usdc = address(0x07865c6E87B9F70255377e024ace6630C1Eaa37F);
+    address aPoolAddrProv = address(0x5E52dEc931FFb32f609681B8438A51c675cc232d);
+    address aToken = address(0xBcca60bB61934080951369a648Fb03DF4F96263C);
+    address link = address(0x326C977E6efc84E512bB9C30f76E30c160eD06FB);
+    bytes32 keyhash = bytes32(0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15); */
+    /** */
+    /** POLYGON MAINNET */
+    address usdc = address(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
+    address aPoolAddrProv = address(0xd05e3E715d945B59290df0ae8eF85c1BdB684744);
+    address aToken = address(0x1a13F4Ca1d028320A707D99520AbFefca3998b7F);
+    address link = address(0xb0897686c545045aFc77CF20eC7A532E3120E0F1);
+    bytes32 keyhash = bytes32(0x6e099d640cde6de9d40ac749b4b594126b0169747122711109c9985d47751f93);
+    /** */
+    /** POLYGON MUMBAI */
+    /* address usdc = address(0x0FA8781a83E46826621b3BC094Ea2A0212e71B23);
+    address aPoolAddrProv = address(0x178113104fEcbcD7fF8669a0150721e231F0FD4B);
+    address aToken = address(0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9);
+    address link = address(0x326C977E6efc84E512bB9C30f76E30c160eD06FB);
+    bytes32 keyhash = bytes32(0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f); */
+    /** */
     uint64 subscriptionId = 1;
-    bytes32 keyhash = bytes32(0xAA77729D3466CA35AE8D28B3BBAC7CC36A5031EFDC430821C02BC31A238AF445);
     IERC20 public usdcInstance = IERC20(usdc);
     IAToken public aTokenInstance = IAToken(aToken);
     address alice = makeAddr("alice");
@@ -30,11 +52,14 @@ contract PremiumPoolTest is Test {
     address charlie = makeAddr("charlie");
 
     function setUp() public {
-        forkId = vm.createSelectFork("https://mainnet.infura.io/v3/1fc7c7c3701c4083b769e561ae251f9a");
+        //forkId = vm.createSelectFork("https://mainnet.infura.io/v3/1fc7c7c3701c4083b769e561ae251f9a");
+        //forkId = vm.createSelectFork("https://goerli.infura.io/v3/1fc7c7c3701c4083b769e561ae251f9a");
+        forkId = vm.createSelectFork("https://polygon-mainnet.infura.io/v3/1fc7c7c3701c4083b769e561ae251f9a");
+        //forkId = vm.createSelectFork("https://polygon-mumbai.infura.io/v3/1fc7c7c3701c4083b769e561ae251f9a");
         vrfCoordinator = new VRFCoordinatorV2Mock(0, 0);
         vrfCoordinator.createSubscription();
         vrfCoordinator.fundSubscription(1, 7 ether);
-        pool = new PremiumPool(usdc, aPool, aToken, address(vrfCoordinator), link, subscriptionId, keyhash);
+        pool = new PremiumPool(usdc, aPoolAddrProv, aToken, address(vrfCoordinator), link, subscriptionId, keyhash);
         draw = pool.draw();
         vrfCoordinator.addConsumer(subscriptionId, address(draw));
         ticket = pool.ticket();
@@ -42,12 +67,13 @@ contract PremiumPoolTest is Test {
         deal(address(usdc), alice, 10000 * (10**18));
         deal(address(usdc), bob, 10000 * (10**18));
         deal(address(usdc), charlie, 10000 * (10**18));
+        LendingController lendingController = pool.lending();
         vm.prank(alice);
-        usdcInstance.approve(address(pool), 10000 * (10**18));
+        usdcInstance.approve(address(lendingController), 10000 * (10**18));
         vm.prank(bob);
-        usdcInstance.approve(address(pool), 10000 * (10**18));
+        usdcInstance.approve(address(lendingController), 10000 * (10**18));
         vm.prank(charlie);
-        usdcInstance.approve(address(pool), 10000 * (10**18));
+        usdcInstance.approve(address(lendingController), 10000 * (10**18));
     }
 
     // a. The contract is deployed successfully.
@@ -161,13 +187,13 @@ contract PremiumPoolTest is Test {
     }
 
     // j. Cannot pick a winner if there is no winning prize
-    function testCannotCloseWithoutPrize() public {
+    /* function testCannotCloseWithoutPrize() public {
         skip(24 hours);
         vm.prank(alice);
         pool.deposit(100 * (10**18));
         vm.expectRevert(abi.encodePacked("There is no winning prize for this draw"));
         pool.pickWinner();
-    }
+    } */
 
     // k. Cannot pick a winner if draw is already closed.
     function testCannotAlreadyClosed() public {
@@ -209,7 +235,8 @@ contract PremiumPoolTest is Test {
         (, bool currentDrawIsOpen, , , uint256 currentDrawPrize, uint256 currentDrawDeposit, ) = draw.draws(currentDrawId);
 
         uint256 totalSupply = ticket.totalSupply();
-        uint256 expectedPrize = aTokenInstance.balanceOf(address(pool)) - totalSupply;
+        LendingController lendingController = pool.lending();
+        uint256 expectedPrize = aTokenInstance.balanceOf(address(lendingController)) - totalSupply;
 
         assertEq(currentDrawPrize, expectedPrize);
         assertEq(currentDrawDeposit, totalSupply);
