@@ -52,8 +52,8 @@ PremiumPool is a non-custodial protocol. That means no one has the ability to co
 
 # Deployment  
   
-Contract deployed and verified to Görli Testnet.  
-Contract address [0xC2265816a443691576D9fad0A03472B5c6F1f590](https://goerli.etherscan.io/address/0xC2265816a443691576D9fad0A03472B5c6F1f590#writeContract)  
+Contract deployed and verified on [Görli Testnet](https://goerli.etherscan.io/address/0xbacb905c1ca6d033ecde8b6fe068412090ff64b1#code)    
+Contract deployed and verified on [Polygon Mainnet](https://polygonscan.com/address/0x18e7f6638c2e0ac3d8600a5ddfde7d466fa02784#code)  
 [Front-end App](https://premium-pool.vercel.app/)  
 
 # Instructions for local installation and tests    
@@ -79,16 +79,15 @@ Contract address [0xC2265816a443691576D9fad0A03472B5c6F1f590](https://goerli.eth
 # Instructions for UI testing  
 
 Draw is triggered automatically every 24 hours via ChainLink Keepers. For the sake of testing I removed the hard constraint about respecting draw end-time and I added a button to invoke PickWinner function.  
-These are the steps to follow to use the app:  
+  
+[Faucet for Görli USDC](https://staging.aave.com/reserve-overview/?underlyingAsset=0x9fd21be27a2b059a288229361e2fa632d8d2d074&marketName=proto_goerli)  
+  
 
+These are the steps to follow to use the app:  
+  
 	a) Access the Front-end App  
-	b) Connect Metamask Account 
-	c) Approve $USDC spending by PremiumPool contract
+	b) Connect Metamask Account  
+	c) Approve $USDC spending by PremiumPool contract  
 	d) Deposit $USDC  
 	e) (Optional) Withdraw $USDC  
 	f) Click "Pick a Winner" or wait for draw end-time.  
-
-
-
-
-
