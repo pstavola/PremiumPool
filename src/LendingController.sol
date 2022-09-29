@@ -31,6 +31,7 @@ contract LendingController is
      * @param _usdcAmount usdc amount
      */
     function withdraw(address sender, uint256 _usdcAmount, address _usdc, address aToken, address _aPool) public {
+        require(IAToken(aToken).balanceOf(address(this)) >= _usdcAmount, "AToken: You cannot withdraw more than deposited!");
         IAToken(aToken).approve(address(_aPool), _usdcAmount);
         ILendingPool(_aPool).withdraw(address(_usdc), _usdcAmount, sender); // REMOVED FOR TESTING PURPOSES
         //IERC20(_usdc).transfer(sender, _usdcAmount);

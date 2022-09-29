@@ -56,9 +56,10 @@ contract PremiumPool is
     function withdraw(uint256 _usdcAmount) public {
         require(ticket.balanceOf(msg.sender) >= _usdcAmount, "You cannot withdraw more than deposited!");
 
-        ticket.burn(msg.sender, _usdcAmount);
-
         lending.withdraw(msg.sender, _usdcAmount, address(usdc), address(aToken), address(aPool));
+        
+        ticket.approve(address(this), _usdcAmount);
+        ticket.transferFrom(msg.sender, address(0), _usdcAmount);
 
         if(ticket.balanceOf(msg.sender) == 0){
             delete users[userIndex[msg.sender]];
