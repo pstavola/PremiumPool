@@ -7,17 +7,17 @@ import {parseUnits } from 'ethers/lib/utils'
 import {PoolABI as abi} from '../abi/PoolABI.tsx'
 import { Contract } from "ethers"
 import { TransactionResponse,TransactionReceipt } from "@ethersproject/abstract-provider"
-import { contractAddress } from '../../config'
-//import { message } from 'react-message-popup'
 
 interface Props {
     currentAccount: string | undefined
+    contractAddress: string | undefined
 }
 
 declare let window: any;
 
 export default function Withdraw(props:Props){
   const currentAccount = props.currentAccount
+  const contractAddress = props.contractAddress
   const [amount,setAmount]=useState<string>('100')
 
   async function withdraw(event:React.FormEvent) {

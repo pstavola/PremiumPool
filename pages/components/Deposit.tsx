@@ -9,17 +9,21 @@ import {PoolABI as abi} from '../abi/PoolABI.tsx'
 import {ERC20ABI as erc20abi} from '../abi/ERC20ABI.tsx'
 import { Contract } from "ethers"
 import { TransactionResponse,TransactionReceipt } from "@ethersproject/abstract-provider"
-import { contractAddress, contractUsdcaddress, contractLendingController } from '../../config'
-//import { message } from 'react-message-popup'
 
 interface Props {
     currentAccount: string | undefined
+    contractAddress: string | undefined
+    contractUsdcaddress: string | undefined
+    contractLendingController: string | undefined
 }
 
 declare let window: any;
 
 export default function Deposit(props:Props){
     const currentAccount = props.currentAccount
+    const contractAddress = props.contractAddress
+    const contractUsdcaddress = props.contractUsdcaddress
+    const contractLendingController = props.contractLendingController
     const [amount,setAmount]=useState<string>('100')
 
     async function approve(event:React.FormEvent) {

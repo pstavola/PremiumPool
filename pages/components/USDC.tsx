@@ -3,17 +3,17 @@ import { Text} from '@chakra-ui/react'
 // @ts-ignore
 import {ERC20ABI as erc20abi} from '../abi/ERC20ABI.tsx'
 import {ethers} from 'ethers'
-import { contractUsdcaddress } from '../../config'
-//import { message } from 'react-message-popup'
 
 interface Props {
     currentAccount: string | undefined
+    contractUsdcaddress: string | undefined
 }
 
 declare let window: any;
 
 export default function USDC(props:Props){
     const currentAccount = props.currentAccount
+    const contractUsdcaddress = props.contractUsdcaddress
     const [balance, setBalance] =useState<number|undefined>(undefined)
 
     useEffect(()=>{

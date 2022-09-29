@@ -6,18 +6,21 @@ import {PoolABI as abi} from '../abi/PoolABI.tsx'
 import {ERC20ABI as erc20abi} from '../abi/ERC20ABI.tsx'
 import { ethers, Contract} from 'ethers'
 import { TransactionResponse,TransactionReceipt } from '@ethersproject/abstract-provider'
-import { contractAddress, contractTicket } from '../../config'
 import humanizeDuration from 'humanize-duration'
 //import { message } from 'react-message-popup'
 
 interface Props {
     currentAccount: string | undefined
+    contractAddress: string | undefined
+    contractTicket: string | undefined
 }
 
 declare let window: any;
 
 export default function ReadContract(props:Props){
     const currentAccount = props.currentAccount
+    const contractAddress = props.contractAddress
+    const contractTicket = props.contractTicket
     const [totalDeposit, setTotalDeposit]= useState<string>("")
     const [timeleft, SetTimeleft] =useState<string>("")
 

@@ -8,7 +8,6 @@ import { Text, Button, Link } from '@chakra-ui/react'
 import {ethers} from "ethers"
 import Web3Modal from 'web3modal'
 import WalletConnectProvider from '../node_modules/@walletconnect/web3-provider'
-import { INFURA_ID, NETWORKS } from "../constants";
 // @ts-ignore
 import ReadContract from './components/ReadContract.tsx'
 // @ts-ignore
@@ -21,19 +20,17 @@ import USDC from './components/USDC.tsx'
 import {PoolABI as abi} from './abi/PoolABI.tsx'
 // @ts-ignore
 import {ERC20ABI as erc20abi} from './abi/ERC20ABI.tsx'
-import { contractAddress, contractTicket } from '../config'
-//import { message } from 'react-message-popup'
-
-const targetNetwork = NETWORKS.localhost;
-const blockExplorer = targetNetwork.blockExplorer;
+import {CONTRACT, INFURA_ID} from '../config'
 
 declare let window:any
+
+let chainname, contractAddress, contractTicket, contractUsdcaddress, contractLendingController, blockExplorer;
 
 const Home: NextPage = () => {
     const [balance, setBalance] = useState<string | undefined>()
     const [currentAccount, setCurrentAccount] = useState<string | undefined>()
     const [chainId, setChainId] = useState<number | undefined>()
-    const [chainname, setChainName] = useState<string | undefined>()
+    //const [chainname, setChainName] = useState<string | undefined>()
     const [userDeposit, setUserDeposited]=useState<string>()
 
     /* web3Modal configuration for enabling wallet access */
@@ -59,7 +56,13 @@ const Home: NextPage = () => {
             const connection = await web3Modal.connect()
             const provider = new ethers.providers.Web3Provider(connection)
             const accounts = await provider.listAccounts()
-            setCurrentAccount(accounts[0])
+            
+            provider.getNetwork().then((result)=>{
+                setChainId(result.chainId)
+                console.log(result.chainId);
+                //setChainName(result.name)
+                setContractVar(result.name, result.chainId, accounts[0]);
+            })
         } catch (err) {
             console.log('error:', err)
         }
@@ -77,12 +80,24 @@ const Home: NextPage = () => {
         }
     }
 
+    function setContractVar(chain:string, chainId:number, account:string) {
+        console.log(CONTRACT(chainId).contractAddress);
+        const network = CONTRACT(chainId);
+        chainname = network.name;
+        contractAddress = network.contractAddress;
+        contractTicket = network.contractTicket;
+        contractUsdcaddress = network.contractUsdcaddress;
+        contractLendingController = network.contractLendingController;
+        blockExplorer = network.blockExplorer;
+        setCurrentAccount(account)
+    }
+
     useEffect(() => {
         if(!currentAccount || !ethers.utils.isAddress(currentAccount)) return
         if(!window.ethereum) return
 
         window.ethereum.on('chainChanged', () => {
-            getInfo();
+            window.location.reload();
         })
         window.ethereum.on('accountsChanged', () => {
             changeAccount()
@@ -118,13 +133,14 @@ const Home: NextPage = () => {
     async function getInfo() {
         const provider = new ethers.providers.Web3Provider(window.ethereum)
 
-        provider.getBalance(currentAccount!).then((result)=>{
-            setBalance(ethers.utils.formatEther(result))
-        })
-
         provider.getNetwork().then((result)=>{
             setChainId(result.chainId)
-            setChainName(result.name)
+            //setChainName(result.name)
+            setContractVar(result.name, result.chainId, currentAccount);
+        })
+
+        provider.getBalance(currentAccount!).then((result)=>{
+            setBalance(ethers.utils.formatEther(result))
         })
 
         queryUserDeposit(window)
@@ -162,7 +178,9 @@ const Home: NextPage = () => {
                 </Button>
             }
             </Box>
-            {currentAccount?
+        </VStack>
+        {currentAccount?
+            <VStack color='purple'>
                 <Box  my={4} p={4} w='100%' borderWidth="1px" borderRadius="lg">
                     <Heading my={4}  fontSize='xl'>
                         <Link color='purple.500' href={blockExplorer + "address/" + currentAccount}>
@@ -172,18 +190,33 @@ const Home: NextPage = () => {
                     <Text>$ETH Balance: {balance}</Text>
                     <Text>Chain name: {chainname}</Text>
                     <Text>Chain Id: {chainId}</Text>
-                    <USDC currentAccount={currentAccount}/>
+                    <USDC 
+                        currentAccount={currentAccount} 
+                        contractUsdcaddress = {contractUsdcaddress}
+                    />
                     <Text><b>Your $USDC PremiumPool deposit</b>: {userDeposit}</Text>
-                    <Deposit currentAccount= {currentAccount}/>
-                    <Withdraw currentAccount= {currentAccount}/>
+                    <Deposit 
+                        currentAccount= {currentAccount} 
+                        contractAddress = {contractAddress} 
+                        contractUsdcaddress = {contractUsdcaddress} 
+                        contractLendingController = {contractLendingController}
+                    />
+                    <Withdraw 
+                        currentAccount= {currentAccount} 
+                        contractAddress = {contractAddress}
+                    />
                 </Box>
-                :<></>
-            }  
-            <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
-                <Heading my={4}  fontSize='xl'>PremiumPool Info</Heading>
-                <ReadContract currentAccount= {currentAccount}/>
-            </Box>
-        </VStack>
+                <Box  mb={0} p={4} w='100%' borderWidth="1px" borderRadius="lg">
+                    <Heading my={4}  fontSize='xl'>PremiumPool Info</Heading>
+                    <ReadContract 
+                        currentAccount= {currentAccount} 
+                        contractAddress = {contractAddress} 
+                        contractTicket = {contractTicket}
+                    />
+                </Box>
+            </VStack>
+            :<></>
+        }
         </>
     )
 }
