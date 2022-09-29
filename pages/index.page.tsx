@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import NextLink from "next/link"
-import { VStack, Heading, Box, LinkOverlay, LinkBox} from "@chakra-ui/layout"
+import { VStack, Heading, Box } from "@chakra-ui/layout"
 import { Text, Button, Link } from '@chakra-ui/react'
 import {ethers} from "ethers"
 import Web3Modal from 'web3modal'
@@ -24,13 +24,12 @@ import {CONTRACT, INFURA_ID} from '../config'
 
 declare let window:any
 
-let chainname, contractAddress, contractTicket, contractUsdcaddress, contractLendingController, blockExplorer;
+let chainname, currency, contractAddress, contractTicket, contractUsdcaddress, contractLendingController, blockExplorer;
 
 const Home: NextPage = () => {
     const [balance, setBalance] = useState<string | undefined>()
     const [currentAccount, setCurrentAccount] = useState<string | undefined>()
     const [chainId, setChainId] = useState<number | undefined>()
-    //const [chainname, setChainName] = useState<string | undefined>()
     const [userDeposit, setUserDeposited]=useState<string>()
 
     /* web3Modal configuration for enabling wallet access */
@@ -60,7 +59,6 @@ const Home: NextPage = () => {
             provider.getNetwork().then((result)=>{
                 setChainId(result.chainId)
                 console.log(result.chainId);
-                //setChainName(result.name)
                 setContractVar(result.name, result.chainId, accounts[0]);
             })
         } catch (err) {
@@ -81,9 +79,9 @@ const Home: NextPage = () => {
     }
 
     function setContractVar(chain:string, chainId:number, account:string) {
-        console.log(CONTRACT(chainId).contractAddress);
         const network = CONTRACT(chainId);
         chainname = network.name;
+        currency = network.currency;
         contractAddress = network.contractAddress;
         contractTicket = network.contractTicket;
         contractUsdcaddress = network.contractUsdcaddress;
@@ -135,7 +133,6 @@ const Home: NextPage = () => {
 
         provider.getNetwork().then((result)=>{
             setChainId(result.chainId)
-            //setChainName(result.name)
             setContractVar(result.name, result.chainId, currentAccount);
         })
 
@@ -187,7 +184,7 @@ const Home: NextPage = () => {
                             Account {currentAccount}
                         </Link>
                     </Heading>
-                    <Text>$ETH Balance: {balance}</Text>
+                    <Text>${currency} Balance: {balance}</Text>
                     <Text>Chain name: {chainname}</Text>
                     <Text>Chain Id: {chainId}</Text>
                     <USDC 

@@ -7,7 +7,6 @@ import {ERC20ABI as erc20abi} from '../abi/ERC20ABI.tsx'
 import { ethers, Contract} from 'ethers'
 import { TransactionResponse,TransactionReceipt } from '@ethersproject/abstract-provider'
 import humanizeDuration from 'humanize-duration'
-//import { message } from 'react-message-popup'
 
 interface Props {
     currentAccount: string | undefined
