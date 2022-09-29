@@ -65,7 +65,7 @@ export default function Deposit(props:Props){
         <NumberInput defaultValue={amount} min={0} onChange={handleChange}>
             <NumberInputField />
         </NumberInput>
-        <Button my={2} onClick={approve} color='red' isDisabled={!currentAccount}>⬇️ Approve $USDC</Button>
+        <Button my={2} onClick={approve} color='red' isDisabled={!currentAccount}>🤝 Approve $USDC</Button>
         <Button mx={2} onClick={deposit} color='red' isDisabled={!currentAccount}>⬇️ Deposit $USDC</Button>
         </FormControl>
         </form>

@@ -171,7 +171,7 @@ const Home: NextPage = () => {
             <Box w='100%' my={4}>
             {currentAccount? 
                 <Button type="button" w='100%' color='red' onClick={disconnect}>
-                        Disconnect
+                        ⏏️ Disconnect
                 </Button>
                 : <Button type="button" w='100%' color='red' onClick={connect}>
                         🔗 Connect MetaMask
