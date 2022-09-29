@@ -14,4 +14,8 @@ contract PremiumPoolTicket is ERC20, Ownable {
     function burn(address _account, uint256 _amount) public onlyOwner {
         super._burn(_account , _amount);
     }
+
+    function decimals() public view virtual override returns (uint8) {
+        return 6;
+    }
 }

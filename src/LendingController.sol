@@ -32,7 +32,7 @@ contract LendingController is
      */
     function withdraw(address sender, uint256 _usdcAmount, address _usdc, address aToken, address _aPool) public {
         IAToken(aToken).approve(address(_aPool), _usdcAmount);
-        //IERC20(_usdc).transfer(sender, _usdcAmount);
         ILendingPool(_aPool).withdraw(address(_usdc), _usdcAmount, sender); // REMOVED FOR TESTING PURPOSES
+        //IERC20(_usdc).transfer(sender, _usdcAmount);
     }
 }

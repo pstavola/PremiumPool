@@ -80,8 +80,8 @@ contract PremiumPool is
         require(ticket.totalSupply() != 0, "There has been no participation during this draw");
 
         uint256 totalDeposit = ticket.totalSupply();
+        require(aToken.balanceOf(address(lending))>totalDeposit, "There is no winning prize for this draw");
         uint256 prize = aToken.balanceOf(address(lending)) - totalDeposit;
-        //require(prize > 0, "There is no winning prize for this draw");
 
         draw.updatePrize(prize);
         draw.updateDeposit(totalDeposit);
