@@ -70,7 +70,8 @@ Contract deployed and verified on [Polygon Mainnet](https://polygonscan.com/addr
 
 		forge init --force --no-commit  
 		forge install openzeppelin/openzeppelin-contracts --no-commit  
-		forge install smartcontractkit/chainlink --no-commit  
+		forge install smartcontractkit/chainlink --no-commit 
+		forge install foundry-rs/forge-std --no-commit 
 
 4. Run Foundry tests  
 
