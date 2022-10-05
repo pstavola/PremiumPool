@@ -1,5 +1,5 @@
 // src/component/Deposit.tsx
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {Button, NumberInput,  NumberInputField,  FormControl,  FormLabel } from '@chakra-ui/react'
 import {ethers} from 'ethers'
 import {parseUnits } from 'ethers/lib/utils'
@@ -9,6 +9,9 @@ import {PoolABI as abi} from '../abi/PoolABI.tsx'
 import {ERC20ABI as erc20abi} from '../abi/ERC20ABI.tsx'
 import { Contract } from "ethers"
 import { TransactionResponse,TransactionReceipt } from "@ethersproject/abstract-provider"
+
+import { ToastContainer, toast, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Props {
     currentAccount: string | undefined
@@ -25,6 +28,44 @@ export default function Deposit(props:Props){
     const contractUsdcaddress = props.contractUsdcaddress
     const contractLendingController = props.contractLendingController
     const [amount,setAmount]=useState<string>('100')
+    const toastId = useRef(null);
+
+    const pending = () => {
+        toastId.current = toast.info("Transaction Pending...", {
+            position: "top-right",
+            autoClose: false,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
+    };
+
+    const success = () => {
+        toast.dismiss(toastId.current);
+        toast.success("Transaction Complete!", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
+    };
+
+    const error = (msg) => {
+        toast.error(msg, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
+    };
 
     async function approve(event:React.FormEvent) {
         event.preventDefault()
@@ -35,10 +76,13 @@ export default function Deposit(props:Props){
 
         erc20.approve(contractLendingController, parseUnits(amount, 6))
         .then((tr: TransactionResponse) => {
-            console.log(`TransactionResponse TX hash: ${tr.hash}`)
-            tr.wait().then((receipt:TransactionReceipt)=>{console.log("approve receipt",receipt)})
-        })
-        //.catch((err)=>message.error(err.error.data.message, 10000))
+            console.log(`TransactionResponse TX hash: ${tr.hash}`);
+            pending();
+            tr.wait().then((receipt:TransactionReceipt) => {
+                console.log("approve receipt",receipt);
+                success();
+            });
+        }).catch((err)=>error({ err }.err.reason));
     }
 
     async function deposit(event:React.FormEvent) {
@@ -50,10 +94,13 @@ export default function Deposit(props:Props){
 
         pool.deposit(parseUnits(amount, 6))
         .then((tr: TransactionResponse) => {
-            console.log(`TransactionResponse TX hash: ${tr.hash}`)
-            tr.wait().then((receipt:TransactionReceipt)=>{console.log("deposit receipt",receipt)})
-        })
-        //.catch((err)=>message.error(err.error.data.message, 10000))
+            console.log(`TransactionResponse TX hash: ${tr.hash}`);
+            pending();
+            tr.wait().then((receipt:TransactionReceipt) => {
+                console.log("deposit receipt",receipt);
+                success();
+            });
+        }).catch((err)=>error({ err }.err.reason))
     }
 
     const handleChange = (value:string) => setAmount(value)

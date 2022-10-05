@@ -8,6 +8,10 @@ import { ethers, Contract} from 'ethers'
 import { TransactionResponse,TransactionReceipt } from '@ethersproject/abstract-provider'
 import humanizeDuration from 'humanize-duration'
 
+import { useRef } from "react";
+import { ToastContainer, toast, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 interface Props {
     currentAccount: string | undefined
     contractAddress: string | undefined
@@ -22,20 +26,61 @@ export default function ReadContract(props:Props){
     const contractTicket = props.contractTicket
     const [totalDeposit, setTotalDeposit]= useState<string>("")
     const [timeleft, SetTimeleft] =useState<string>("")
+    const toastId = useRef(null);
+
+    const pending = () => {
+        toastId.current = toast.info("Transaction Pending...", {
+            position: "top-right",
+            autoClose: false,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
+    };
+
+    const success = () => {
+        toast.dismiss(toastId.current);
+        toast.success("Transaction Complete!", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
+    };
+
+    const error = (msg) => {
+        toast.error(msg, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+    };
 
     async function pick(event:React.FormEvent) {
         event.preventDefault()
-        if(!window.ethereum) return    
+        if(!window.ethereum) return 
         const provider = new ethers.providers.Web3Provider(window.ethereum)
         const signer = provider.getSigner()
         const pool:Contract = new ethers.Contract(contractAddress, abi, signer)
 
         pool.pickWinner()
         .then((tr: TransactionResponse) => {
-            console.log(`TransactionResponse TX hash: ${tr.hash}`)
-            tr.wait().then((receipt:TransactionReceipt)=>{console.log("pickWinner receipt",receipt)})
-        })
-        //.catch((err)=>message.error(err.error.data.message, 10000))
+            console.log(`TransactionResponse TX hash: ${tr.hash}`);
+            pending();
+            tr.wait().then((receipt:TransactionReceipt) => {
+                console.log("pickWinner receipt",receipt);
+                success();
+            });
+        }).catch((err)=>error({ err }.err.reason))
     }
 
     useEffect( () => {
@@ -48,7 +93,7 @@ export default function ReadContract(props:Props){
 
         pool.getTimeLeft().then((result:string)=>{
             SetTimeleft(result)
-        }).catch('error', console.error);
+        }).catch((err)=>error({ err }.err.reason))
 
         // listen for changes on an Ethereum address
         console.log(`listening for Transfer...`)
@@ -78,7 +123,7 @@ export default function ReadContract(props:Props){
 
         ticket.totalSupply().then((result:string)=>{
             setTotalDeposit(ethers.utils.formatUnits(result, 6))
-        }).catch('error', console.error);
+        }).catch((err)=>error({ err }.err.reason))
     }
 
     return (
@@ -92,5 +137,6 @@ export default function ReadContract(props:Props){
                 </FormControl>
             </form>
         </div>
+        
     )
 }
