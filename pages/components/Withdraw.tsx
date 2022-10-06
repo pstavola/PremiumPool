@@ -1,5 +1,5 @@
 // src/component/Deposit.tsx
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {Button, NumberInput,  NumberInputField,  FormControl,  FormLabel } from '@chakra-ui/react'
 import {ethers} from 'ethers'
 import {parseUnits } from 'ethers/lib/utils'
@@ -7,6 +7,9 @@ import {parseUnits } from 'ethers/lib/utils'
 import {PoolABI as abi} from '../abi/PoolABI.tsx'
 import { Contract } from "ethers"
 import { TransactionResponse,TransactionReceipt } from "@ethersproject/abstract-provider"
+
+import { ToastContainer, toast, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Props {
     currentAccount: string | undefined
@@ -19,6 +22,44 @@ export default function Withdraw(props:Props){
   const currentAccount = props.currentAccount
   const contractAddress = props.contractAddress
   const [amount,setAmount]=useState<string>('100')
+  const toastId = useRef(null);
+
+  const pending = () => {
+    toastId.current = toast.info("Transaction Pending...", {
+        position: "top-right",
+        autoClose: false,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+    });
+  };
+
+  const success = () => {
+      toast.dismiss(toastId.current);
+      toast.success("Transaction Complete!", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+      });
+  };
+
+  const error = (msg) => {
+      toast.error(msg, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+  };
 
   async function withdraw(event:React.FormEvent) {
     event.preventDefault()
@@ -29,10 +70,13 @@ export default function Withdraw(props:Props){
 
     pool.withdraw(parseUnits(amount, 6))
       .then((tr: TransactionResponse) => {
-        console.log(`TransactionResponse TX hash: ${tr.hash}`)
-        tr.wait().then((receipt:TransactionReceipt)=>{console.log("withdraw receipt",receipt)})
-      })
-      //.catch((err)=>message.error(err.error.data.message, 10000))
+        console.log(`TransactionResponse TX hash: ${tr.hash}`);
+        pending();
+        tr.wait().then((receipt:TransactionReceipt) => {
+            console.log("withdraw receipt",receipt);
+            success();
+        });
+      }).catch((err)=>error({ err }.err.reason))
  }
 
   const handleChange = (value:string) => setAmount(value)

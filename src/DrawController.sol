@@ -92,7 +92,7 @@ contract DrawController is
         currentDraw.isOpen = false;
         emit CloseDraw(currentDraw.drawId, currentDraw.endTime);
 
-        requestId = coordinator.requestRandomWords(keyHash, subscriptionId, 3, 50000, 2);
+        requestId = coordinator.requestRandomWords(keyHash, subscriptionId, 3, 50000, 1);
         emit RandomnessRequested(requestId, currentDraw.drawId);
     }
 

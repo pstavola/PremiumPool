@@ -24,10 +24,10 @@ export const CONTRACTS = {
         name: "Görli",
         chainId: 5,
         currency: "ETH",
-        contractAddress : "0xBacB905C1cA6d033EcdE8B6FE068412090Ff64b1",
+        contractAddress : "0xABFc7756f649241D79F4114f9D95D60E2DBfF253",
         contractUsdcaddress : "0x9FD21bE27A2B059a288229361E2fA632D8D2d074",
-        contractLendingController : "0x2699cdb77DBda9A78c3C0528bB80d9C1949d624D",
-        contractTicket : "0x4Dd2B987Add365aF52097B81Df9Dbd528DB3b992",
+        contractLendingController : "0xB9b444A88dF65cc62D68F4570Ab1F8A37C02Ac63",
+        contractTicket : "0xADE3b41cd7F1246209739F6f7deFF1Ee3B95Bc41",
         blockExplorer: "https://goerli.etherscan.io/",
     },
     polygon: {

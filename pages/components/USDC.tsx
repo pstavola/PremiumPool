@@ -1,8 +1,11 @@
-import React, { useEffect,useState } from 'react'
+import React, { useEffect,useState, useRef } from 'react'
 import { Text} from '@chakra-ui/react'
 // @ts-ignore
 import {ERC20ABI as erc20abi} from '../abi/ERC20ABI.tsx'
 import {ethers} from 'ethers'
+
+import { ToastContainer, toast, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Props {
     currentAccount: string | undefined
@@ -15,6 +18,18 @@ export default function USDC(props:Props){
     const currentAccount = props.currentAccount
     const contractUsdcaddress = props.contractUsdcaddress
     const [balance, setBalance] =useState<number|undefined>(undefined)
+
+    const error = (msg) => {
+        toast.error(msg, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+    };
 
     useEffect(()=>{
         if(!window.ethereum) return
@@ -53,7 +68,7 @@ export default function USDC(props:Props){
 
         erc20.balanceOf(currentAccount).then((result:number)=>{
             setBalance(Number(ethers.utils.formatUnits(result, 6)))
-        })//.catch((err)=>message.error(err.error.data.message, 10000))
+        }).catch((err)=>error({ err }.err.reason))
     } 
 
     return (

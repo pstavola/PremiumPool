@@ -1,5 +1,5 @@
 // pages/index.tsx
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import NextLink from "next/link"
@@ -22,6 +22,9 @@ import {PoolABI as abi} from './abi/PoolABI.tsx'
 import {ERC20ABI as erc20abi} from './abi/ERC20ABI.tsx'
 import {CONTRACT, INFURA_ID} from '../config'
 
+import { ToastContainer, toast, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 declare let window:any
 
 let chainname, currency, contractAddress, contractTicket, contractUsdcaddress, contractLendingController, blockExplorer;
@@ -31,6 +34,18 @@ const Home: NextPage = () => {
     const [currentAccount, setCurrentAccount] = useState<string | undefined>()
     const [chainId, setChainId] = useState<number | undefined>()
     const [userDeposit, setUserDeposited]=useState<string>()
+
+    const error = (msg) => {
+        toast.error(msg, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+    };
 
     /* web3Modal configuration for enabling wallet access */
     async function getWeb3Modal() {
@@ -62,7 +77,8 @@ const Home: NextPage = () => {
                 setContractVar(result.name, result.chainId, accounts[0]);
             })
         } catch (err) {
-            console.log('error:', err)
+            console.log('error:', err);
+            error({ err }.err.reason);
         }
     }
 
@@ -74,7 +90,8 @@ const Home: NextPage = () => {
             setBalance(undefined)
             setCurrentAccount(undefined)
         } catch (err) {
-            console.log('error:', err)
+            console.log('error:', err);
+            error({ err }.err.reason);
         }
     }
 
@@ -134,11 +151,11 @@ const Home: NextPage = () => {
         provider.getNetwork().then((result)=>{
             setChainId(result.chainId)
             setContractVar(result.name, result.chainId, currentAccount);
-        })
+        }).catch((err)=>error({ err }.err.reason))
 
         provider.getBalance(currentAccount!).then((result)=>{
             setBalance(ethers.utils.formatEther(result))
-        })
+        }).catch((err)=>error({ err }.err.reason))
 
         queryUserDeposit(window)
     }
@@ -155,7 +172,7 @@ const Home: NextPage = () => {
 
         ticket.balanceOf(currentAccount).then((result:string)=>{
             setUserDeposited(ethers.utils.formatUnits(result, 6))
-        })//.catch((err)=>message.error(err.error.data.message, 10000))
+        }).catch((err)=>error({ err }.err.reason))
     }
 
     return (
@@ -211,6 +228,18 @@ const Home: NextPage = () => {
                         contractTicket = {contractTicket}
                     />
                 </Box>
+                <ToastContainer
+                    transition={Slide}
+                    position="top-right"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick={false}
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                />
             </VStack>
             :<></>
         }
