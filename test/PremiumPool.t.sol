@@ -187,13 +187,13 @@ contract PremiumPoolTest is Test {
     }
 
     // j. Cannot pick a winner if there is no winning prize
-    /* function testCannotCloseWithoutPrize() public {
+    function testCannotCloseWithoutPrize() public {
         skip(24 hours);
         vm.prank(alice);
         pool.deposit(100 * (10**18));
         vm.expectRevert(abi.encodePacked("There is no winning prize for this draw"));
         pool.pickWinner();
-    } */
+    }
 
     // k. Cannot pick a winner if draw is already closed.
     function testCannotAlreadyClosed() public {
@@ -245,12 +245,6 @@ contract PremiumPoolTest is Test {
         uint256 aliceBalance = ticket.balanceOf(alice);
         uint256 bobBalance = ticket.balanceOf(bob);
         uint256 charlieBalance = ticket.balanceOf(charlie);
-
-        // updating drawId in order to point to the previous draw already closed
-        stdstore
-            .target(address(draw))
-            .sig(draw.drawId.selector)
-            .checked_write(currentDrawId);
 
         uint256[] memory randomWords = new uint256[](1);
         randomWords[0] = _randomNum;
