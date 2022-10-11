@@ -23,7 +23,7 @@ contract LendingController is
     function deposit(address sender, uint256 _usdcAmount, address _usdc, address _aPool) public {
         IERC20(_usdc).transferFrom(sender, address(this), _usdcAmount);
         IERC20(_usdc).approve(address(_aPool), _usdcAmount);
-        ILendingPool(_aPool).deposit(address(_usdc), _usdcAmount, address(this), 0); // REMOVED FOR TESTING PURPOSES
+        ILendingPool(_aPool).deposit(address(_usdc), _usdcAmount, address(this), 0);
     }
 
      /**
@@ -33,7 +33,6 @@ contract LendingController is
     function withdraw(address sender, uint256 _usdcAmount, address _usdc, address aToken, address _aPool) public {
         require(IAToken(aToken).balanceOf(address(this)) >= _usdcAmount, "AToken: You cannot withdraw more than deposited!");
         IAToken(aToken).approve(address(_aPool), _usdcAmount);
-        ILendingPool(_aPool).withdraw(address(_usdc), _usdcAmount, sender); // REMOVED FOR TESTING PURPOSES
-        //IERC20(_usdc).transfer(sender, _usdcAmount);
+        ILendingPool(_aPool).withdraw(address(_usdc), _usdcAmount, sender);
     }
 }
