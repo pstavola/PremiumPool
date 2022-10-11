@@ -12,36 +12,56 @@ import "./LendingController.sol";
 
 /**
  * @title PremiumPoolStorage
- * @author patricius
- * @notice PremiumPool storage
- * @dev 
- */
+ * @author Patrizio Stavola
+ * @notice PremiumPool storage contract stores and initializes all gloabal variables
+*/
 contract PremiumPoolStorage is
     Ownable
 {
     /* ========== GLOBAL VARIABLES ========== */
 
-    DrawController public immutable draw; // draw controller instance
-    LendingController public immutable lending; // lending controller instance
-    IERC20 immutable usdc; // $USDC instance
-    PremiumPoolTicket public immutable ticket; // ticket instance
-    ILendingPoolAddressesProvider immutable aProvider; // aave address registry
-    ILendingPool immutable aPool; // aave usdc lending pool
-    IAToken immutable aToken; // aave interest bearing token
+    ///@notice Draw Controller instance
+    DrawController public immutable draw;
+    ///@notice Lending Controller instance
+    LendingController public immutable lending;
 
-    mapping(address => uint256) public userIndex;
+    ///@notice $USDC token instance
+    IERC20 immutable usdc;
+    ///@notice $PPT token instance
+    PremiumPoolTicket public immutable ticket;
+    
+    ///@notice Aave address registry
+    ILendingPoolAddressesProvider immutable aProvider;
+    ///@notice Aave $USDC lending pool instance
+    ILendingPool immutable aPool;
+    ///@notice Aave interest bearing token instance
+    IAToken immutable aToken;
+
+    ///@notice array used to cycle over the users partecipating to next draw
     address[] public users;
-
+    ///@notice mapping to handle users array
+    mapping(address => uint256) public userIndex;
+    
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _usdc, address _aPoolAddrProvider, address _aToken, address vrfCoordinator, address _link, uint64 _subscriptionId, bytes32 _keyhash) {
+    /**
+     * @notice initializing Draw Controller, Lending Controller, tokens, Aave details and users array.
+     * @param _usdc address of $USDC token
+     * @param _aPoolAddrProvider address of Aave address registry
+     * @param _aToken address of Aave interest bearing token
+     * @param _vrfCoordinator address of Chainlink VRF Coordinator
+     * @param _link address of $LINK token
+     * @param _subscriptionId Chainlink VRF subscription Id
+     * @param _keyhash Chainlink VRF Key Hash
+    */
+    constructor(address _usdc, address _aPoolAddrProvider, address _aToken, address _vrfCoordinator, address _link, uint64 _subscriptionId, bytes32 _keyhash) {
+        draw = new DrawController(_vrfCoordinator, _link, _subscriptionId, _keyhash);
+        lending = new LendingController();
         usdc = IERC20(_usdc);
         ticket = new PremiumPoolTicket();
         aProvider = ILendingPoolAddressesProvider(address(_aPoolAddrProvider));
         aPool = ILendingPool(aProvider.getLendingPool());
         aToken = IAToken(_aToken);
-        draw = new DrawController(vrfCoordinator, _link, _subscriptionId, _keyhash);
-        lending = new LendingController();
         users = new address[](0);
     }
 }

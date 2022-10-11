@@ -13,10 +13,10 @@ import "./PremiumPoolStorage.sol";
 
 /**
  * @title PremiumPool
- * @author patricius
- * @notice PremiumPool main contract
- * @dev 
- */
+ * @author Patrizio Stavola
+ * @notice Main PremiumPool contract responsible for managing deposits and withdrawals (pool activities) and entry point for end of draws updates and initial checks
+ * @dev state variables are stored with contract PremiumPoolStorage which is inherited by PremiumPool contract
+*/
 contract PremiumPool is
     Ownable, PremiumPoolStorage
 {
@@ -33,8 +33,9 @@ contract PremiumPool is
     /* ========== FUNCTIONS ========== */
 
     /**
-     * @notice allows users to deposit usdc. Users must manually approve transfer by contract beforehand
-     */
+     * @notice allows users to deposit $USDC. Users must manually approve transfer by contract beforehand
+     * @param _usdcAmount amount of tokens to deposit
+    */
     function deposit(uint256 _usdcAmount) public {
         if(userIndex[msg.sender] == 0) {
             userIndex[msg.sender] = users.length;
@@ -50,9 +51,9 @@ contract PremiumPool is
     }
 
     /**
-     * @notice allows users to withdraw usdc.
-     * @param _usdcAmount usdc amount
-     */
+     * @notice allows users to withdraw $USDC.
+     * @param _usdcAmount amount of tokens to withdraw
+    */
     function withdraw(uint256 _usdcAmount) public {
         require(ticket.balanceOf(msg.sender) >= _usdcAmount, "You cannot withdraw more than deposited!");
 
@@ -68,8 +69,8 @@ contract PremiumPool is
     }
 
     /**
-     * @notice close the draw and request a random number to pick the winner.
-     */
+     * @notice checks if it is allowed to close the draw, set prize and total deposit for current drwa, close it and create a new draw.
+    */
     function pickWinner() public {
         uint256 currentDrawId = draw.drawId();
         (, bool currentDrawIsOpen, , uint256 currentDrawEndTime, , , ) = draw.draws(currentDrawId);
@@ -89,26 +90,33 @@ contract PremiumPool is
     }
 
     /**
-     * @notice create a new draw
-     */
+     * @notice create a new draw by invoking Draw Controller function
+    */
     function createNewDraw() public onlyOwner {
         draw.createDraw();
     }
 
     /**
-     * @notice get list of users
-     */
-    function getUsers() public view returns (address[] memory) {
-        return users;
+     * @notice get list of all users partecipating to the draw
+     * @return _users array of users
+    */
+    function getUsers() public view returns (address[] memory _users) {
+        _users = users;
     }
 
     /**
-     * @notice get draw address
-     */
-    function getTimeLeft() public view returns (uint256) {
-        return draw.timeLeft();
+     * @notice get time left to next draw by invoking Draw Controller function
+     * @return _timeleft time left as uint
+    */
+    function getTimeLeft() public view returns (uint256 _timeleft) {
+        _timeleft = draw.timeLeft();
     }
 
+    /**
+     * @notice mint new $PPT tokens. Only PremiumPool contract and Draw Controller contracts can mint
+     * @param _minter address minting tokens
+     * @param _amount amount of tokens to mint
+    */
     function mintTicket(address _minter, uint256 _amount) external {
         require(msg.sender == address(this) || msg.sender == address(draw), "You cannot mint tickets!");
         ticket.mint(_minter, _amount);

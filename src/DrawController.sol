@@ -9,15 +9,16 @@ import "./PremiumPool.sol";
 import "./Ticket.sol";
 
 /**
- * @title Draw
- * @author patricius
- * @notice Contract to handle draws
- * @dev 
- */
+ * @title DrawController
+ * @author Patrizio Stavola
+ * @notice Draw Controller responsible for managing draws (create and close) and to request randomness via Chainlink Verifiable Random Function architecture
+ * @dev this contract inherits VRFConsumerBaseV2 to interact with Chainlink VRF
+*/
 contract DrawController is
     Ownable,
     VRFConsumerBaseV2
 {
+    ///@notice structure that defines draws
     struct Draw {
         uint256 drawId;
         bool isOpen;
@@ -30,20 +31,26 @@ contract DrawController is
 
     /* ========== GLOBAL VARIABLES ========== */
 
-    PremiumPool immutable pool; // pool instance
-    PremiumPoolTicket poolTicket; // ticket instance
-    uint256 public constant DRAW_DURATION = 24 hours; //duration of every draw
+    ///@notice constant defining draw duration
+    uint256 public constant DRAW_DURATION = 24 hours;
+    ///@notice Id counter
     uint256 public drawId;
+    ///@notice mapping to store past and current draws
     mapping(uint256 => Draw) public draws;
 
-    /* ChainLink VRF v2 parameters */
+    ///@notice PremiumPool contract instance
+    PremiumPool immutable pool;
+    ///@notice $PPT token instance
+    PremiumPoolTicket poolTicket;
+    ///@notice $LINK token instance
+    LinkTokenInterface immutable link;
+ 
+    ///@notice ChainLink VRF v2 parameters
     VRFCoordinatorV2Interface immutable coordinator;
     uint64 immutable subscriptionId;
     bytes32 immutable keyHash;
     uint256[] public randomWords;
     uint256 public requestId;
-    /* */
-    LinkTokenInterface immutable link;
 
     /* ========== EVENTS ========== */
 
@@ -54,8 +61,15 @@ contract DrawController is
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address vrfCoordinator, address _link, uint64 _subscriptionId, bytes32 _keyhash) VRFConsumerBaseV2(vrfCoordinator) {
-        coordinator = VRFCoordinatorV2Interface(vrfCoordinator);
+    /**
+     * @notice initializing Chainlink VRF, PremiumPool and $LINK token.
+     * @param _vrfCoordinator address of Chainlink VRF Coordinator
+     * @param _link address of $LINK token
+     * @param _subscriptionId Chainlink VRF subscription Id
+     * @param _keyhash Chainlink VRF Key Hash
+    */
+    constructor(address _vrfCoordinator, address _link, uint64 _subscriptionId, bytes32 _keyhash) VRFConsumerBaseV2(_vrfCoordinator) {
+        coordinator = VRFCoordinatorV2Interface(_vrfCoordinator);
         keyHash = _keyhash;
         subscriptionId = _subscriptionId;
         pool = PremiumPool(msg.sender);
@@ -65,8 +79,8 @@ contract DrawController is
     /* ========== FUNCTIONS ========== */
 
     /**
-     * @notice create a new draw. Only the Owner contract can create new draws. drawId counter is increased each new draw created.
-     */
+     * @notice create a new draw. Only PremiumPool contract can create new draws. drawId counter is increased each new draw created.
+    */
     function createDraw() external onlyOwner {
         drawId++;
         Draw memory newDraw = Draw({
@@ -85,8 +99,8 @@ contract DrawController is
     }
 
     /**
-     * @notice close the draw and request a random number to pick the winner.
-     */
+     * @notice close the draw and request randomness via Chainlink VRF. Only PremiumPool contract can close draws
+    */
     function closeDraw() external onlyOwner {
         Draw storage currentDraw = draws[drawId];
         currentDraw.isOpen = false;
@@ -97,8 +111,9 @@ contract DrawController is
     }
 
     /**
-     * @notice fulfillRandomWords override.
-     */
+     * @notice VRFConsumerBaseV2 fulfillRandomWords override. It picks a winner by using a roulette selection over a weighted array of partecipants addresses
+     * @param _randomWords array of random words provided by Chainlink oracles
+    */
     function fulfillRandomWords(uint256, uint256[] memory _randomWords) internal override {
         randomWords = _randomWords;
         uint256 drawToUpdate = drawId;
@@ -123,30 +138,39 @@ contract DrawController is
         }
     }
 
+    /**
+     * @notice updates draw prize. Only PremiumPool contract can update
+     * @param _prize prize amount
+    */
     function updatePrize(uint256 _prize) public onlyOwner {
         draws[drawId].prize = _prize;
     }
 
+    /**
+     * @notice updates draw final deposit. Only PremiumPool contract can update
+     * @param _usdcDeposit total deposit amount
+    */
     function updateDeposit(uint256 _usdcDeposit) public onlyOwner {
         draws[drawId].usdcDeposit = _usdcDeposit;
     }
-
-    function cancelVRFSubscription() external {
-        coordinator.cancelSubscription(subscriptionId, msg.sender);
-    }
   
-    function fundVRFSubscription(uint96 amount) public {
-        link.transferAndCall(address(coordinator), amount, abi.encode(subscriptionId));
+    /**
+     * @notice fund Chainlink VRF subscription. Anybody can fund a subscription
+     * @param _amount funds to send to subscription
+    */
+    function fundVRFSubscription(uint96 _amount) public {
+        link.transferAndCall(address(coordinator), _amount, abi.encode(subscriptionId));
     }
 
     /**
-     * @notice returns the time left before the deadline to the frontend
-     */
-    function timeLeft() public view returns(uint256) {
+     * @notice returns the time left to the deadline of current draw. Used by frontend
+     * @return _timeleft time left as uint
+    */
+    function timeLeft() public view returns(uint256 _timeleft) {
         uint256 deadline = draws[drawId].endTime;
         if (block.timestamp>=deadline)
-            return 0;
+            _timeleft = 0;
         else
-            return deadline-block.timestamp;
+            _timeleft = deadline-block.timestamp;
     }
 }
