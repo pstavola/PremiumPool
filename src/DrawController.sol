@@ -92,7 +92,7 @@ contract DrawController is
         currentDraw.isOpen = false;
         emit CloseDraw(currentDraw.drawId, currentDraw.endTime);
 
-        requestId = coordinator.requestRandomWords(keyHash, subscriptionId, 3, 50000, 1);
+        requestId = coordinator.requestRandomWords(keyHash, subscriptionId, 3, 150000, 1);
         emit RandomnessRequested(requestId, currentDraw.drawId);
     }
 
@@ -101,12 +101,14 @@ contract DrawController is
      */
     function fulfillRandomWords(uint256, uint256[] memory _randomWords) internal override {
         randomWords = _randomWords;
-        Draw storage currentDraw = draws[drawId];
+        uint256 drawToUpdate = drawId;
+        drawToUpdate--;
+        Draw storage currentDraw = draws[drawToUpdate];
         address[] memory users = pool.getUsers();
         PremiumPoolTicket ticket = PremiumPoolTicket(address(pool.ticket()));
         uint256 rnd = randomWords[0] % ticket.totalSupply();
 
-        for(uint256 i=0; i<users.length; i++) {
+        for(uint256 i=0; i<users.length && currentDraw.winner==address(0); i++) {
             address currentUser = pool.users(i);
             uint256 balance = ticket.balanceOf(currentUser);
             if(rnd < balance) {
